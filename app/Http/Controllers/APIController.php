@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use JWTAuth;
 use App\User;
+
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use App\Http\Requests\RegistrationFormRequest;
@@ -21,10 +22,17 @@ class APIController extends Controller
 
     public function login(Request $request)
     {
+        
         $input = $request->only('email', 'password');
+        
         $token = null;
-
-        if (!$token = JWTAuth::attempt($input)) {
+        $customClaims = ['foo' => 'bar', 'baz' => 'bob'];
+        $token = JWTAuth::attempt($input);
+        error_log($token); 
+        $userroles = User::where('email','=',$request->email)->first();
+        error_log($userroles->role);
+        if (!$token) {
+            error_log('here');
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid Email or Password',
@@ -34,6 +42,7 @@ class APIController extends Controller
         return response()->json([
             'success' => true,
             'token' => $token,
+            'userroles'=> $userroles->role
         ]);
 
 
@@ -62,8 +71,9 @@ class APIController extends Controller
     }
 
 
-    public function register(RegistrationFormRequest $request)
+    public function register(Request $request)
     {
+        error_log($request);
         error_log($request->name);
         $user = new User();
         $user->name = $request->name;
