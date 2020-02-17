@@ -23,6 +23,36 @@ class NinthziauddinboardgeneralgroupController extends Controller
 
     }
 
+
+    public function search(Request $request){
+
+        error_log($request);
+        
+        $studentname = $request->studentname;
+        $fathername = $request->fathername;
+        $rollnumber = $request->enrollmentnumber;
+        $schoolname = $request->schoolname;
+
+        
+        $wherearray=['students.studentname'=>$studentname,'students.fathername'=> $fathername,'students.enrollmentnumber'=>$rollnumber];
+
+        $schoolid = School::where('schoolname',$schoolname)->value('id');
+ 
+        error_log($schoolid);
+
+         $userdata = Student::with('schoolname')->with('ninthgeneraldata')->where('studentname',$studentname)->orWhere('enrollmentnumber',$rollnumber)->orWhere('fathername',$fathername)->orWhere('schoolid',$schoolid)->get();
+
+        $userdataarray = $userdata->toArray(); 
+         
+       
+
+
+         return $userdataarray ;     
+        
+        
+
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -30,18 +60,71 @@ class NinthziauddinboardgeneralgroupController extends Controller
      */
     public function create(Request $request)
     {
-              
-        $school = School::firstorCreate(['schoolname'=> 'Private']);
+          
+        if ($request->schoolid)
+        {  
+            error_log($request->schoolid);
+            $schoolid = $request["schoolid"];
+        }
+
+        else if ($request->schoolname) {
+         error_log("here1");   
+        $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
          
         $schoolid = $school['id'];
         error_log($schoolid);
 
+        }
+        else {
+        $school = School::firstorCreate(['schoolname'=> 'Private']);
+         
+        $schoolid = $school['id'];
+        error_log($schoolid);
+    }
+
+
+      if ($request['group'] == 'Private'){
+        $school = School::firstorCreate(['schoolname'=> 'Private']);
+        $schoolid = $school['id'];
+
+      }
         
 
 
         $uniquekey = $request['enrollmentnumber'].$request['yearofappearing'];
 
         $studentid = Student::firstorCreate(['ninthexamuniquekey'=> $uniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $schoolid,'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'ninthexamuniquekey'=> $uniquekey]);
+
+
+        if ($items['englishmarks'] == 'A'){
+            $items['englishmarks'] = '';
+
+           }
+
+           if ($items['sindhimarks'] == 'A'){
+            $items['sindhimarks'] = '';
+
+           }
+
+           if ($items['pakistanstudiesmark'] == 'A'){
+            $items['pakistanstudiesmark'] = '';
+
+           }
+
+
+            if ($items['generalsciencemarks'] == 'A'){
+                $items['generalsciencemarks'] = '';
+
+           }
+
+
+            if ($items['mathsmarks'] == 'A'){
+                $items['mathsmarks'] = '';
+
+           }
+
+
+
 
 
         $totalmarks = $request['englishmarks']+ $request['sindhimarks']+ $request['pakistanstudiesmark']+ $request['generalsciencemarks']+$request['mathsmarks'] ;
@@ -60,7 +143,7 @@ class NinthziauddinboardgeneralgroupController extends Controller
 
         
 
-         $grade = $this->gradecalculation($percent);
+         $grade = $this->gradecalculation($totalmarks);
 
 
         $passarray = array_filter($percentarray,array($this,'checkpassstatus'));
@@ -78,26 +161,59 @@ class NinthziauddinboardgeneralgroupController extends Controller
 
          $ninthgeneralclass =  new Ninthziauddinboardgeneralgroup();
 
-         $ninthgeneralclass->EnglishMarks = $request->englishmarks;
-         $ninthgeneralclass->SindhiMarks = $request->sindhimarks;
-         $ninthgeneralclass->PakistanStudiesMark = $request->pakistanstudiesmark;
-         $ninthgeneralclass->GeneralScienceMarks = $request->generalsciencemarks;
-         $ninthgeneralclass->MathsMarks = $request->mathsmarks;
-         $ninthgeneralclass->TotalMarks = $totalmarks;
-         $ninthgeneralclass->OverallPercentage = $percent;
-         $ninthgeneralclass->EnglishPercentage = $englishpercent;
-         $ninthgeneralclass->SindhiPercentage = $sindhipercent;
-         $ninthgeneralclass->PakistanStudiesPercentage = $pakistanstudiespercent;
-         $ninthgeneralclass->GeneralSciencePercentage = $generalsciencepercent;
-         $ninthgeneralclass->MathsPercentage = $mathspercent;
+         $ninthgeneralclass->englishmarks = $request->englishmarks;
+         $ninthgeneralclass->sindhimarks = $request->sindhimarks;
+         $ninthgeneralclass->pakistanstudiesmark = $request->pakistanstudiesmark;
+         $ninthgeneralclass->generalsciencemarks = $request->generalsciencemarks;
+         $ninthgeneralclass->mathsmarks = $request->mathsmarks;
+         $ninthgeneralclass->totalmarks = $totalmarks;
+         $ninthgeneralclass->overallpercentage = $percent;
+         $ninthgeneralclass->englishpercentage = $englishpercent;
+         $ninthgeneralclass->sindhipercentage = $sindhipercent;
+         $ninthgeneralclass->pakistanstudiespercentage = $pakistanstudiespercent;
+         $ninthgeneralclass->generalsciencepercentage = $generalsciencepercent;
+         $ninthgeneralclass->mathspercentage = $mathspercent;
          $ninthgeneralclass->grade = $grade;
-         $ninthgeneralclass->Totalclearedpaper = $clearedsubject;
+         $ninthgeneralclass->totalclearedpaper = $clearedsubject;
          $ninthgeneralclass->examtype = 'Annual';
-         $ninthgeneralclass->PassingStatus = $passingstatus;
+         $ninthgeneralclass->passingstatus = $passingstatus;
          $ninthgeneralclass->group = $request['group'];                       
          $ninthgeneralclass->enrollmentnumber = $uniquekey;
          $ninthgeneralclass -> save();
     }
+
+
+
+         public function gradecalculation($totalmarks){
+        error_log($totalmarks);
+
+        if ($totalmarks > 680)
+        {
+            return "A";
+        }
+
+        elseif ($totalmarks > 594 and $totalmarks <= 670 ){
+            return "B";
+        }
+
+        elseif ($totalmarks > 509 and $totalmarks <= 594 ){
+            return "C";
+        }
+
+        elseif ($totalmarks > 424 and $totalmarks <= 509 ){
+            return "D";
+        }
+
+        elseif ($totalmarks > 339 and $totalmarks <= 424 ){
+            return "D";
+        }
+
+        else if ($totalmarks < 340){
+            return "E";
+        }
+
+     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -120,11 +236,21 @@ class NinthziauddinboardgeneralgroupController extends Controller
              
             error_log("Items"); 
             $now = Carbon::now('utc')->toDateTimeString();
+
+
+            if ($items['schoolname']) {
+                     error_log("here1");   
+                    $schoolid = School::firstorCreate(['schoolname'=> $items["schoolname"]]);
+                    //$schoolid = $school['id'];
+                    error_log($schoolid);
+
+        } 
+        else {
             $schoolid = School::firstOrCreate(['schoolname'=> 'Private']);
             error_log($schoolid);
+        }
 
-
-           $uniquekey = $request['enrollmentnumber'].$request['yearofappearing'];
+           $uniquekey = $items['enrollmentnumber'].$items['yearofappearing'];
 
 
             $studentid = Student::firstorCreate(['ninthexamuniquekey'=> $uniquekey],['studentname'=> $items['studentname'],'fathername'=> $items['fathername'],'schoolid'=> $schoolid['id'],'enrollmentnumber'=> $items['enrollmentnumber'],'dateofbirth' => $items['dateofbirth'],'ninthexamuniquekey'=> $uniquekey]);
@@ -145,7 +271,7 @@ class NinthziauddinboardgeneralgroupController extends Controller
 
            
 
-            $grade = $this->gradecalculation($percent);
+            $grade = $this->gradecalculation($totalmarks);
 
 
             $passarray = array_filter($percentarray,array($this,'checkpassstatus'));
@@ -158,22 +284,22 @@ class NinthziauddinboardgeneralgroupController extends Controller
             }
 
             $formattedarray[]=[
-                 'EnglishMarks' => $items['englishmarks'] ?? 'A',
-                 'SindhiMarks' => $items['sindhimarks'] ?? 'A',
-                 'PakistanStudiesMark' => $items['pakistanstudiesmark'] ?? 'A',
-                 'GeneralScienceMarks' => $items['generalsciencemarks']?? 'A',
-                 'MathsMarks' => $items['mathsmarks']?? 'A',
-                 'TotalMarks' => $totalmarks,
-                 'OverallPercentage' => $percent,
-                 'EnglishPercentage' => $englishpercent,
-                 'SindhiPercentage' => $sindhipercent,
-                 'PakistanStudiesPercentage' => $pakistanstudiespercent,
-                 'GeneralSciencePercentage' => $generalsciencepercent,
-                 'MathsPercentage'=> $mathspercent,
+                 'englishmarks' => $items['englishmarks'] ?? 'A',
+                 'sindhimarks' => $items['sindhimarks'] ?? 'A',
+                 'pakistanstudiesmark' => $items['pakistanstudiesmark'] ?? 'A',
+                 'generalsciencemarks' => $items['generalsciencemarks']?? 'A',
+                 'mathsmarks' => $items['mathsmarks']?? 'A',
+                 'totalmarks' => $totalmarks,
+                 'overallpercentage' => $percent,
+                 'englishpercentage' => $englishpercent,
+                 'sindhipercentage' => $sindhipercent,
+                 'pakistanstudiespercentage' => $pakistanstudiespercent,
+                 'generalsciencepercentage' => $generalsciencepercent,
+                 'mathspercentage'=> $mathspercent,
                  'grade' => $grade,
-                 'Totalclearedpaper' => $clearedsubject,
+                 'totalclearedpaper' => $clearedsubject,
                  'examtype' => 'Annual',
-                 'PassingStatus' => $passingstatus,
+                 'passingstatus' => $passingstatus,
                  'group' => $items['group'],
                  'enrollmentnumber' => $uniquekey,
                  'created_at' => $now,
@@ -200,32 +326,7 @@ class NinthziauddinboardgeneralgroupController extends Controller
             return $arrvalue > 33;
         }
 
-    public function gradecalculation($percentage){
-        error_log($percentage);
-
-        if ($percentage > 80)
-        {
-            return "A";
-        }
-
-        elseif ($percentage > 70 and $percentage <= 80 ){
-            return "B";
-        }
-
-        elseif ($percentage > 60 and $percentage <= 70 ){
-            return "C";
-        }
-
-        elseif ($percentage > 50 and $percentage <= 60 ){
-            return "D";
-        }
-
-        else {
-            return "N/A";
-        }
-
-     }
-
+ 
 
 
 

@@ -5,6 +5,8 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use App\School;
 use App\Ninthziauddinboardcomputer;
+use App\Ninthziauddinboardbio;
+use App\Ninthziauddinboardgeneralgroup;
 
 class Student extends Model
 {
@@ -20,4 +22,16 @@ class Student extends Model
   public function ninthcomputerdata(){
   	return $this->belongsTo('App\Ninthziauddinboardcomputer','ninthexamuniquekey','enrollmentnumber');
   }
+
+
+  public function ninthbiodata(){
+  	return $this->belongsTo('App\Ninthziauddinboardbio','ninthexamuniquekey','enrollmentnumber');
+  }
+
+
+public function ninthgeneraldata(){
+  	return $this->belongsTo('App\Ninthziauddinboardgeneralgroup','ninthexamuniquekey','enrollmentnumber');
+  }
+
+
 }

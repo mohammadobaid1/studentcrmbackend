@@ -24,6 +24,36 @@ class NinthziauddinboardbioController extends Controller
         return $data;
     }
 
+
+       public function search(Request $request){
+
+        error_log($request);
+        
+        $studentname = $request->studentname;
+        $fathername = $request->fathername;
+        $rollnumber = $request->enrollmentnumber;
+        $schoolname = $request->schoolname;
+
+        
+        $wherearray=['students.studentname'=>$studentname,'students.fathername'=> $fathername,'students.enrollmentnumber'=>$rollnumber];
+
+        $schoolid = School::where('schoolname',$schoolname)->value('id');
+ 
+        error_log($schoolid);
+
+         $userdata = Student::with('schoolname')->with('ninthbiodata')->where('studentname',$studentname)->orWhere('enrollmentnumber',$rollnumber)->orWhere('fathername',$fathername)->orWhere('schoolid',$schoolid)->get();
+
+        $userdataarray = $userdata->toArray(); 
+         
+       
+
+
+         return $userdataarray ;     
+        
+        
+
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -69,7 +99,7 @@ class NinthziauddinboardbioController extends Controller
 
          $percentarray = array($englishpercent,$sindhipercent,$pakistanstudiespercent,$chemistrypercent,$biopercent);
 
-         $grade = $this->gradecalculation($percent);
+         $grade = $this->gradecalculation($totalmarks);
 
 
         $passarray = array_filter($percentarray,array($this,'checkpassstatus'));
@@ -85,26 +115,26 @@ class NinthziauddinboardbioController extends Controller
 
          $ninthbioclass =  new Ninthziauddinboardbio();
 
-         $ninthbioclass->EnglishMarks = $request->englishmarks;
-         $ninthbioclass->SindhiMarks = $request->sindhimarks;
-         $ninthbioclass->PakistanStudiesMark = $request->pakistanstudiesmark;
-         $ninthbioclass->ChemistryTheoryMarks = $request->chemistrytheorymarks;
-         $ninthbioclass->ChemistryPracticalMarks = $request->chemistrypracticalmarks;
-         $ninthbioclass->BioTheoryMarks = $request->biotheorymarks;
-         $ninthbioclass->BioPracticalMarks = $request->biopracticalmarks;
-         $ninthbioclass->TotalChemistryMarks = $request->chemistrytheorymarks + $request->chemistrypracticalmarks;
-         $ninthbioclass->TotalBioMarks = $request->biotheorymarks + $request->biopracticalmarks;
-         $ninthbioclass->TotalMarks = $totalmarks;
-         $ninthbioclass->OverallPercentage = $percent;
-         $ninthbioclass->EnglishPercentage = $englishpercent;
-         $ninthbioclass->SindhiPercentage = $sindhipercent;
-         $ninthbioclass->PakistanStudiesPercentage = $pakistanstudiespercent;
-         $ninthbioclass->ChemistryPercentage = $chemistrypercent;
-         $ninthbioclass->BioPercentage = $biopercent;
+         $ninthbioclass->englishmarks = $request->englishmarks;
+         $ninthbioclass->sindhimarks = $request->sindhimarks;
+         $ninthbioclass->pakistanstudiesmark = $request->pakistanstudiesmark;
+         $ninthbioclass->chemistrytheorymarks = $request->chemistrytheorymarks;
+         $ninthbioclass->chemistrypracticalmarks = $request->chemistrypracticalmarks;
+         $ninthbioclass->biotheorymarks = $request->biotheorymarks;
+         $ninthbioclass->biopracticalmarks = $request->biopracticalmarks;
+         $ninthbioclass->totalchemistrymarks = $request->chemistrytheorymarks + $request->chemistrypracticalmarks;
+         $ninthbioclass->totalbiomarks = $request->biotheorymarks + $request->biopracticalmarks;
+         $ninthbioclass->totalmarks = $totalmarks;
+         $ninthbioclass->overallpercentage = $percent;
+         $ninthbioclass->englishpercentage = $englishpercent;
+         $ninthbioclass->sindhipercentage = $sindhipercent;
+         $ninthbioclass->pakistanstudiespercentage = $pakistanstudiespercent;
+         $ninthbioclass->chemistrypercentage = $chemistrypercent;
+         $ninthbioclass->biopercentage = $biopercent;
          $ninthbioclass->grade = $grade;
-         $ninthbioclass->Totalclearedpaper = $clearedsubject;
+         $ninthbioclass->totalclearedpaper = $clearedsubject;
          $ninthbioclass->examtype = 'Annual';
-         $ninthbioclass->PassingStatus = $passingstatus;                       
+         $ninthbioclass->passingstatus = $passingstatus;                       
          $ninthbioclass->enrollmentnumber = $ninthexamuniquekey;
          $ninthbioclass -> save();
     }
@@ -135,6 +165,48 @@ class NinthziauddinboardbioController extends Controller
 
             $studentid = Student::firstorCreate(['ninthexamuniquekey'=> $ninthexamuniquekey],['studentname'=> $items['studentname'],'fathername'=> $items['fathername'],'schoolid'=> $schoolid['id'],'enrollmentnumber'=> $items['enrollmentnumber'],'dateofbirth' => $items['dateofbirth'],'ninthexamuniquekey'=> $ninthexamuniquekey]);
 
+           
+           if ($items['englishmarks'] == 'A'){
+            $items['englishmarks'] = '';
+
+           }
+
+           if ($items['sindhimarks'] == 'A'){
+            $items['sindhimarks'] = '';
+
+           }
+
+           if ($items['pakistanstudiesmark'] == 'A'){
+            $items['pakistanstudiesmark'] = '';
+
+           }
+
+
+            if ($items['chemistrytheorymarks'] == 'A'){
+                $items['chemistrytheorymarks'] = '';
+
+           }
+
+
+            if ($items['chemistrypracticalmarks'] == 'A'){
+                $items['chemistrypracticalmarks'] = '';
+
+           }
+
+
+            if ($items['biotheorymarks'] == 'A'){
+                $items['biotheorymarks'] = '';
+
+           }
+
+
+
+            if ($items['biopracticalmarks'] == 'A'){
+                $items['biopracticalmarks'] = '';
+
+           }
+
+
 
             $totalmarks = $items['englishmarks']+ $items['sindhimarks']+ $items['pakistanstudiesmark']+ $items['chemistrytheorymarks']+$items['chemistrypracticalmarks']+$items['biotheorymarks']+$items['biopracticalmarks'] ;
 
@@ -152,7 +224,7 @@ class NinthziauddinboardbioController extends Controller
 
          
          
-            $grade = $this->gradecalculation($percent);
+            $grade = $this->gradecalculation($totalmarks);
 
             $passarray = array_filter($percentarray,array($this,'checkpassstatus'));
             
@@ -166,26 +238,26 @@ class NinthziauddinboardbioController extends Controller
             }
 
             $formattedarray[]=[
-                 'EnglishMarks' => $items['englishmarks'] ?? 'A',
-                 'SindhiMarks' => $items['sindhimarks'] ?? 'A',
-                 'PakistanStudiesMark' => $items['pakistanstudiesmark'] ?? 'A',
-                 'ChemistryTheoryMarks' => $items['chemistrytheorymarks']?? 'A',
-                 'ChemistryPracticalMarks' => $items['chemistrypracticalmarks']?? 'A',
-                 'BioTheoryMarks' => $items['biotheorymarks'] ?? 'A',
-                 'BioPracticalMarks' => $items['biopracticalmarks'] ?? 'A',
-                 'TotalChemistryMarks' => $chemistrytotalmarks,
-                 'TotalBioMarks' => $biototalmarks,
-                 'TotalMarks' => $totalmarks,
-                 'OverallPercentage' => $percent,
-                 'EnglishPercentage' => $englishpercent,
-                 'SindhiPercentage' => $sindhipercent,
-                 'PakistanStudiesPercentage' => $pakistanstudiespercent,
-                 'ChemistryPercentage' => $chemistrypercent,
-                 'BioPercentage'=> $biopercent,
+                 'englishmarks' => $items['englishmarks'] ?? 'A',
+                 'sindhimarks' => $items['sindhimarks'] ?? 'A',
+                 'pakistanstudiesmark' => $items['pakistanstudiesmark'] ?? 'A',
+                 'chemistrytheorymarks' => $items['chemistrytheorymarks']?? 'A',
+                 'chemistrypracticalmarks' => $items['chemistrypracticalmarks']?? 'A',
+                 'biotheorymarks' => $items['biotheorymarks'] ?? 'A',
+                 'biopracticalmarks' => $items['biopracticalmarks'] ?? 'A',
+                 'totalchemistrymarks' => $chemistrytotalmarks,
+                 'totalbiomarks' => $biototalmarks,
+                 'totalmarks' => $totalmarks,
+                 'overallpercentage' => $percent,
+                 'englishpercentage' => $englishpercent,
+                 'sindhipercentage' => $sindhipercent,
+                 'pakistanstudiespercentage' => $pakistanstudiespercent,
+                 'chemistrypercentage' => $chemistrypercent,
+                 'biopercentage'=> $biopercent,
                  'grade' => $grade,
-                 'Totalclearedpaper' => $clearedsubject,
+                 'totalclearedpaper' => $clearedsubject,
                  'examtype' => 'Annual',
-                 'PassingStatus' => $passingstatus,
+                 'passingstatus' => $passingstatus,
                  'enrollmentnumber' => $ninthexamuniquekey,
                  'created_at' => $now,
                  'updated_at' => $now
@@ -208,28 +280,32 @@ class NinthziauddinboardbioController extends Controller
     }
 
 
-    public function gradecalculation($percentage){
-        error_log($percentage);
+     public function gradecalculation($totalmarks){
+        error_log($totalmarks);
 
-        if ($percentage > 80)
+        if ($totalmarks > 680)
         {
             return "A";
         }
 
-        elseif ($percentage > 70 and $percentage <= 80 ){
+        elseif ($totalmarks > 594 and $totalmarks <= 670 ){
             return "B";
         }
 
-        elseif ($percentage > 60 and $percentage <= 70 ){
+        elseif ($totalmarks > 509 and $totalmarks <= 594 ){
             return "C";
         }
 
-        elseif ($percentage > 50 and $percentage <= 60 ){
+        elseif ($totalmarks > 424 and $totalmarks <= 509 ){
             return "D";
         }
 
-        else {
-            return "N/A";
+        elseif ($totalmarks > 339 and $totalmarks <= 424 ){
+            return "D";
+        }
+
+        else if ($totalmarks < 340){
+            return "E";
         }
 
      }

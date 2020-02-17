@@ -78,17 +78,59 @@ class APIController extends Controller
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
+        $user->role = $request->role;
         $user->password = bcrypt($request->password);
         $user->save();
 
-        if ($this->loginAfterSignUp) {
-            return $this->login($request);
-        }
+        // if ($this->loginAfterSignUp) {
+        //     return $this->login($request);
+        // }
 
         return response()->json([
             'success'   =>  true,
             'data'      =>  $user
         ], 200);
     }
+
+
+    public function deleteuser(Request $request){
+        $user = User::find($request['id']);
+        $user->delete();
+        return response()->json([
+            'success'   =>  true
+        ], 200);
+
+
+    }
+
+
+    public function listuser(){
+        $users = User::all();
+        return $users;
+    }
+
+
+    public function updateuser(Request $request){
+        $user = User::find($request->id);
+        $user->email = $request->email;
+        $user->password = bcrypt($request->password);
+        $user->role = $request->role;
+        $user->name = $request->name;
+        $user->save();
+
+        return response()->json([
+            'success'   =>  true
+        ], 200);
+
+
+    }
+
+
+    public function getuser($id){
+        error_log($id);
+        $user = User::find($id);
+        return $user;
+
+}
 
 }

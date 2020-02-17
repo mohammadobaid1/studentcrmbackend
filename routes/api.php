@@ -23,10 +23,14 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::post('login', 'APIController@login');
 Route::post('register', 'APIController@register');
 Route::post('logout','APIController@logout');
+Route::post('deleteuser', 'APIController@deleteuser');
+Route::get('listuser','APIController@listuser');
+Route::post('updateuser','APIController@updateuser');
+Route::get('getuser/{id}','APIController@getuser');
 
 
-Route::get('getschools',['middleware' => 'auth.role:operator','uses'=> 'SchoolController@index']);
-
+// Route::get('getschools',['middleware' => 'auth.role:operator','uses'=> 'SchoolController@index']);
+Route::get('getschools','SchoolController@index');
 // Route::get('listninthcomputerbatch','NinthcomputerbatchController@index');
 // Route::get('listninthmedicalbatch','NinthmedicalbatchController@index');
 Route::get('listmatricbatch','MatricbatchController@index');
@@ -65,6 +69,7 @@ Route::post('searchninthsciencedata','NinthziauddinboardcomputerController@searc
 Route::get('getninthbio','NinthziauddinboardbioController@index');
 Route::post('bulkinsertziauddinninthbio', 'NinthziauddinboardbioController@bulkinsert');
 Route::post('insertninthbio','NinthziauddinboardbioController@create');
+Route::post('searchninthbiodata','NinthziauddinboardbioController@search');
 
 
 // Ninth General Group
@@ -72,6 +77,7 @@ Route::post('insertninthbio','NinthziauddinboardbioController@create');
 Route::get('getninthgeneral','NinthziauddinboardgeneralgroupController@index');
 Route::post('bulkinsertziauddinninthgeneral', 'NinthziauddinboardgeneralgroupController@bulkinsert');
 Route::post('insertninthgeneral','NinthziauddinboardgeneralgroupController@create');
+Route::post('searchninthgeneraldata','NinthziauddinboardgeneralgroupController@search');
 
 
 

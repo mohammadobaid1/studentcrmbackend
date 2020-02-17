@@ -102,7 +102,7 @@ class NinthziauddinboardcomputerController extends Controller
 
          $percentarray = array($englishpercent,$sindhipercent,$pakistanstudiespercent,$chemistrypercent,$computerpercent);
 
-         $grade = $this->gradecalculation($percent);
+         $grade = $this->gradecalculation($totalmarks);
 
 
         $passarray = array_filter($percentarray,array($this,'checkpassstatus'));
@@ -160,6 +160,54 @@ class NinthziauddinboardcomputerController extends Controller
             $studentid = Student::firstorCreate(['ninthexamuniquekey'=> $uniquekey],['studentname'=> $items['studentname'],'fathername'=> $items['fathername'],'schoolid'=> $schoolid['id'],'enrollmentnumber'=> $items['enrollmentnumber'],'dateofbirth' => $items['dateofbirth'],'ninthexamuniquekey'=> $uniquekey]);
 
 
+
+
+        if ($items['englishmarks'] == 'A'){
+            $items['englishmarks'] = '';
+
+           }
+
+           if ($items['sindhimarks'] == 'A'){
+            $items['sindhimarks'] = '';
+
+           }
+
+           if ($items['pakistanstudiesmark'] == 'A'){
+           // error_log($items['pakistanstudiesmark']);
+
+            $data = json_decode($items['pakistanstudiesmark'], true);
+            $data['pakistanstudiesmark'] = "";
+            $items['pakistanstudiesmark'] = json_encode($data);
+
+           }
+
+
+            if ($items['chemistrytheorymarks'] == 'A'){
+                $items['chemistrytheorymarks'] = '';
+
+           }
+
+
+            if ($items['chemistrypracticalmarks'] == 'A'){
+                $items['chemistrypracticalmarks'] = '';
+
+           }
+
+
+            if ($items['computertheorymarks'] == 'A'){
+                $items['computertheorymarks'] = '';
+
+           }
+
+
+
+            if ($items['computerpracticalmarks'] == 'A'){
+                $items['computerpracticalmarks'] = '';
+
+           }
+
+          // error_log($items['pakistanstudiesmark']);
+
             $totalmarks = $items['englishmarks']+ $items['sindhimarks']+ $items['pakistanstudiesmark']+ $items['chemistrytheorymarks']+$items['chemistrypracticalmarks']+$items['computertheorymarks']+$items['computerpracticalmarks'] ;
 
             $computertotalmarks = $items['computertheorymarks'] + $items['computerpracticalmarks'] ;
@@ -175,7 +223,7 @@ class NinthziauddinboardcomputerController extends Controller
 
          
          
-            $grade = $this->gradecalculation($percent);
+            $grade = $this->gradecalculation($totalmarks);
 
             $passarray = array_filter($percentarray,array($this,'checkpassstatus'));
             
@@ -234,28 +282,32 @@ class NinthziauddinboardcomputerController extends Controller
     }
 
 
-    public function gradecalculation($percentage){
-        error_log($percentage);
+    public function gradecalculation($totalmarks){
+        error_log($totalmarks);
 
-        if ($percentage > 80)
+        if ($totalmarks > 680)
         {
             return "A";
         }
 
-        elseif ($percentage > 70 and $percentage <= 80 ){
+        elseif ($totalmarks > 594 and $totalmarks <= 670 ){
             return "B";
         }
 
-        elseif ($percentage > 60 and $percentage <= 70 ){
+        elseif ($totalmarks > 509 and $totalmarks <= 594 ){
             return "C";
         }
 
-        elseif ($percentage > 50 and $percentage <= 60 ){
+        elseif ($totalmarks > 424 and $totalmarks <= 509 ){
             return "D";
         }
 
-        else {
-            return "N/A";
+        elseif ($totalmarks > 339 and $totalmarks <= 424 ){
+            return "D";
+        }
+
+        else if ($totalmarks < 340){
+            return "E";
         }
 
      }
