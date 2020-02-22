@@ -40,7 +40,7 @@ Route::get('listsecondpreengineeringbatch','SecondyearpreengineeringbatchControl
 Route::get('listsecondpremedicalbatch','SecondyearpremedicalbatchController@index');
 // Route::post('addninthcomputerstudent','NinthcomputerbatchController@create');
 // Route::post('addninthmedicalstudent','NinthmedicalbatchController@create');
-Route::post('addmatricstudent','MatricbatchController@create');
+//Route::post('addmatricstudent','MatricbatchController@create');
 Route::post('addfirstyearpreengstudent','FirstyearpreengineeringbatchController@create');
 Route::post('addfirstyearpremedstudent','FirstyearpremedicalbatchController@create');
 Route::post('addsecondyearpreengstudent','SecondyearpreengineeringbatchController@create');
@@ -53,7 +53,10 @@ Route::post('bulkfirstyearpremedbatch','FirstyearpremedicalbatchController@bulkr
 Route::post('bulksecondyearpreengbatch','SecondyearpreengineeringbatchController@bulkrecordinsert');
 Route::post('bulksecondyearpremedbatch','SecondyearpremedicalbatchController@bulkrecordinsert');
 
+// HSC pre med
 
+Route::get('hsconepremed','HsconepremedController@index');
+Route::post('hsconepremed','HsconepremedController@create');
 
 
 
@@ -64,7 +67,7 @@ Route::post('inserttestdata','NinthziauddinboardcomputerController@create');
 Route::post('bulkinsertziauddinninth', 'NinthziauddinboardcomputerController@bulkinsert');
 Route::post('searchninthsciencedata','NinthziauddinboardcomputerController@search');
 
-//   Ninth bio 
+//   Ninth bio
 
 Route::get('getninthbio','NinthziauddinboardbioController@index');
 Route::post('bulkinsertziauddinninthbio', 'NinthziauddinboardbioController@bulkinsert');
@@ -102,7 +105,7 @@ Route::post('insertmatricgeneral','MatricziauddingeneralController@create');
 
 
 
-// Get students by enrollment number 
+// Get students by enrollment number
 
 Route::get('getstudentbyrollnumber/{enrollmentnumber}','StudentController@getstudentbyenrollmentnumber');
 

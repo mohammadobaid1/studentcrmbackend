@@ -33,17 +33,17 @@ class FirstyearpreengineeringbatchController extends Controller
     {
 
         error_log($request);
-        
+
          if ($request->schoolid)
-        {  
+        {
             error_log($request->schoolid);
             $schoolid = $request["schoolid"];
         }
 
         else if ($request->schoolname) {
-         error_log("here1");   
+         error_log("here1");
         $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
-         
+
         $schoolid = $school['id'];
         error_log($schoolid);
         error_log("here");
@@ -65,7 +65,7 @@ class FirstyearpreengineeringbatchController extends Controller
         error_log($totalmarks);
         $percent = $totalmarks/600 *100;
         error_log("percentage");
-        error_log($percent); 
+        error_log($percent);
         $firstyearpreengclass->totalmarks =  $totalmarks;
         $firstyearpreengclass->percentage = $percent;
         $grade = $this->gradecalculation($percent);
@@ -141,7 +141,7 @@ class FirstyearpreengineeringbatchController extends Controller
              ];
 
 
-        } 
+        }
        Firstyearpreengineeringbatch::insert($formattedarray);
         return $formattedarray;
 
@@ -149,8 +149,8 @@ class FirstyearpreengineeringbatchController extends Controller
 
 
 
-    }  
-    
+    }
+
     /**
      * Store a newly created resource in storage.
      *
