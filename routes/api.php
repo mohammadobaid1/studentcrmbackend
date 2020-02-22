@@ -57,7 +57,12 @@ Route::post('bulksecondyearpremedbatch','SecondyearpremedicalbatchController@bul
 
 Route::get('hsconepremed','HsconepremedController@index');
 Route::post('hsconepremed','HsconepremedController@create');
+Route::post('bulkhsconepremed','HsconepremedController@bulkrecordinsert');
 
+// HSC pre eng
+Route::get('hsconepreeng','HsconepreengController@index');
+Route::post('hsconepreeng','HsconepreengController@create');
+Route::post('bulkhsconepreeng','HsconepreengController@bulkrecordinsert');
 
 
 // Ninth Computer

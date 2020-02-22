@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Hsconepremed;
+use App\Hsconepreeng;
 
-class HsconepremedController extends Controller
+class HsconepreengController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +14,7 @@ class HsconepremedController extends Controller
      */
     public function index()
     {
-        return Hsconepremed::all();
+        return Hsconepreeng::all();
     }
 
     /**
@@ -24,7 +24,7 @@ class HsconepremedController extends Controller
      */
     public function create(Request $request)
     {
-        $studentrecord = Hsconepremed::create($request->all());
+        $studentrecord = Hsconepreeng::create($request->all());
         return $studentrecord;
     }
     public function bulkrecordinsert(Request $request)
@@ -48,7 +48,7 @@ class HsconepremedController extends Controller
             $items->updated_at = $now;
              $formattedarray[]= $items;
         }
-        Hsconepremed::insert($formattedarray);
+        Hsconepreeng::insert($formattedarray);
         return $formattedarray;
 
 
