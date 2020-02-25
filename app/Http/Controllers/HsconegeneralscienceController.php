@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Hsconepreeng;
-
-class HsconepreengController extends Controller
+use App\Hsconegeneralscience;
+use App\Services\GradeService;
+class HsconegeneralscienceController extends Controller
 {
+    public $gradeService;
+    public function __construct(GradeService $gradeService){
+        $this->gradeService = $gradeService;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -14,7 +18,7 @@ class HsconepreengController extends Controller
      */
     public function index()
     {
-        return Hsconepreeng::all();
+        //
     }
 
     /**
@@ -24,12 +28,11 @@ class HsconepreengController extends Controller
      */
     public function create(Request $request)
     {
-        $studentrecord = Hsconepreeng::create($request->all());
+        $studentrecord = Hsconegeneralscience::create($request->all());
         return $studentrecord;
     }
     public function bulkrecordinsert(Request $request)
     {
-
         $data = $request->json()->all();
         $formattedarray = [];
         foreach( $data as $items){
@@ -38,9 +41,11 @@ class HsconepreengController extends Controller
             $totalmarks = $items['englishmarks'] + $items['urdumarks'] +
             $items['islamiatmarks'] +
             $items['physicspracticalmarks'] +
-            $items['physicstheorymarks'] + $items['chemistrytheorymarks'] +
-            $items['chemistrypracticalmarks'] + $items['zoologymarks'] + $items['botanymarks'];
+            $items['physicstheorymarks'] + $items['statspracticalmarks'] +
+            $items['statstheorymarks'] + $items['computertheorymarks'] + $items['computerpracticalmarks'] +
+            $items['mathmarks'];
             $percentage = ($totalmarks*700)/100;
+            $grade = $this->gradeService->gradecalculation($percentage);
             $items->totalmarks = $totalmarks;
             $items->percentage = $percentage;
             $items->schoolid = $schoolid['id'];
@@ -48,7 +53,7 @@ class HsconepreengController extends Controller
             $items->updated_at = $now;
              $formattedarray[]= $items;
         }
-        Hsconepreeng::insert($formattedarray);
+        Hsconegeneralscience::insert($formattedarray);
         return $formattedarray;
 
 

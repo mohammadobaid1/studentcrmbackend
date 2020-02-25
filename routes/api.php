@@ -64,6 +64,22 @@ Route::get('hsconepreeng','HsconepreengController@index');
 Route::post('hsconepreeng','HsconepreengController@create');
 Route::post('bulkhsconepreeng','HsconepreengController@bulkrecordinsert');
 
+// HSC general science
+
+Route::get('hsconegeneralscience','HsconegeneralscienceController@index');
+Route::post('hsconegeneralscience','HsconegeneralscienceController@create');
+Route::post('bulkhsconegeneralscience','HsconegeneralscienceController@bulkrecordinsert');
+
+// HSC commerce
+Route::get('hsconecommerce','HsconecommerceController@index');
+Route::post('hsconecommerce','HsconecommerceController@create');
+Route::post('bulkhsconecommerce','HsconecommerceController@bulkrecordinsert');
+
+// HSC humanities
+Route::get('hsconehumanities','HsconehumanitiesController@index');
+Route::post('hsconehumanities','HsconehumanitiesController@create');
+Route::post('bulkhsconehumanities','HsconehumanitiesController@bulkrecordinsert');
+
 
 // Ninth Computer
 

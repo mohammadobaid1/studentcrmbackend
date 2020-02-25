@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateHsconepremedTable extends Migration
+class CreateHsconepremedsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -19,17 +19,17 @@ class CreateHsconepremedTable extends Migration
             $table->string('studentname');
             $table->string('studentfathername');
             $table->string('studentrollnumber')->unique();
-            $table-> unsignedInteger('englishmarks');
+            $table-> unsignedInteger('englishmarks')->nullable();
             $table-> unsignedInteger('matricpassingyear');
             $table-> unsignedInteger('yearappearing');
-            $table->unsignedInteger ('urdumarks');
-            $table->unsignedInteger('islamiatmarks');
-            $table->unsignedInteger('physicspracticalmarks');
-            $table->unsignedInteger('physicstheorymarks');
-            $table->string('chemistrytheorymarks');
-            $table->string('chemistrypracticalmarks');
-            $table->unsignedInteger('zoologymarks');
-            $table->unsignedInteger('botanymarks');
+            $table->unsignedInteger ('urdumarks')->nullable();
+            $table->unsignedInteger('islamiatmarks')->nullable();
+            $table->unsignedInteger('physicspracticalmarks')->nullable();
+            $table->unsignedInteger('physicstheorymarks')->nullable();
+            $table->string('chemistrytheorymarks')->nullable();
+            $table->string('chemistrypracticalmarks')->nullable();
+            $table->unsignedInteger('zoologymarks')->nullable();
+            $table->unsignedInteger('botanymarks')->nullable();
             $table->unsignedInteger('totalmarks');
             $table->decimal('percentage',5,2);
             $table->string('grade');
