@@ -24,6 +24,97 @@ class NinthziauddinboardgeneralgroupController extends Controller
     }
 
 
+
+       public function deleteuser(Request $request){
+      
+     //   $data = $request->json()->all();
+        //error_log($data);
+
+
+        $userninthdata = Ninthziauddinboardgeneralgroup::find($request['id']);
+        $user = Student::find($request['studentinfo']['id']);
+        $userninthdata->delete();
+        $user->delete();
+
+        
+        
+        
+
+        
+        return response()->json([
+            'success'   =>  true
+        ], 200);
+
+
+    }
+
+
+    public function updaterecords(Request $request){
+
+
+        $user =  Student::find($request['studentid']);
+        $user->studentname = $request['name'];
+        $user->fathername = $request['fathername'];
+        $user->save();
+
+
+        $totalmarks = $request['englishmarks']+ $request['sindhimarks']+ $request['pakistanstudiesmarks']+ $request['generalsciencemarks']+$request['mathsmarks'];
+
+        
+
+
+          $percent = $totalmarks/425 *100;
+         $englishpercent =$request['englishmarks']/75 *100 ;
+         $sindhipercent = $request['sindhimarks']/75 *100 ;
+         $pakistanstudiespercent = $request['pakistanstudiesmarks']/75 *100 ;
+         $mathspercent = $request['mathsmarks']/100 *100;
+         $generalsciencepercent =  $request['generalsciencemarks']/100 *100 ;
+
+         $percentarray = array($englishpercent,$sindhipercent,$pakistanstudiespercent,$mathspercent,$generalsciencepercent);
+
+         $grade = $this->gradecalculation($totalmarks);
+
+
+        $passarray = array_filter($percentarray,array($this,'checkpassstatus'));
+         
+
+         $clearedsubject = count($passarray);
+
+         $passingstatus = 'pass';
+
+         if ($clearedsubject < 5){
+            $passingstatus = 'failed';
+         }
+
+
+        $record = Ninthziauddinboardgeneralgroup::find($request['recordid']);
+        $record->englishmarks = $request['englishmarks'];
+        $record->sindhimarks = $request['sindhimarks'];
+        $record->pakistanstudiesmark = $request['pakistanstudiesmarks'];
+        $record->generalsciencemarks = $request['generalsciencemarks'];
+        $record->mathsmarks = $request['mathsmarks'];
+        $record->englishpercentage = $englishpercent;
+        $record->sindhipercentage = $sindhipercent;
+        $record->pakistanstudiespercentage = $pakistanstudiespercent;
+        $record->generalsciencepercentage = $generalsciencepercent;
+        $record->mathspercentage = $mathspercent;
+        $record->overallpercentage = $percent;
+        $record->totalclearedpaper = $clearedsubject;
+        $record->grade = $grade;
+
+
+        $record->save();
+
+        return response()->json([
+            'success'   =>  true
+        ], 200);
+
+
+    }
+
+
+
+
     public function search(Request $request){
 
         error_log($request);
@@ -96,30 +187,30 @@ class NinthziauddinboardgeneralgroupController extends Controller
         $studentid = Student::firstorCreate(['ninthexamuniquekey'=> $uniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $schoolid,'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'ninthexamuniquekey'=> $uniquekey]);
 
 
-        if ($items['englishmarks'] == 'A'){
-            $items['englishmarks'] = '';
+        if ($request['englishmarks'] == 'A'){
+            $request['englishmarks'] = '';
 
            }
 
-           if ($items['sindhimarks'] == 'A'){
-            $items['sindhimarks'] = '';
+           if ($request['sindhimarks'] == 'A'){
+            $request['sindhimarks'] = '';
 
            }
 
-           if ($items['pakistanstudiesmark'] == 'A'){
-            $items['pakistanstudiesmark'] = '';
-
-           }
-
-
-            if ($items['generalsciencemarks'] == 'A'){
-                $items['generalsciencemarks'] = '';
+           if ($request['pakistanstudiesmark'] == 'A'){
+            $request['pakistanstudiesmark'] = '';
 
            }
 
 
-            if ($items['mathsmarks'] == 'A'){
-                $items['mathsmarks'] = '';
+            if ($request['generalsciencemarks'] == 'A'){
+                $request['generalsciencemarks'] = '';
+
+           }
+
+
+            if ($request['mathsmarks'] == 'A'){
+                $request['mathsmarks'] = '';
 
            }
 

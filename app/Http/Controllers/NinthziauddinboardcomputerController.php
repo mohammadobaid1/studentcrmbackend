@@ -44,7 +44,10 @@ class NinthziauddinboardcomputerController extends Controller
  
         error_log($schoolid);
 
-         $userdata = Student::with('schoolname')->with('ninthcomputerdata')->where('studentname',$studentname)->orWhere('enrollmentnumber',$rollnumber)->orWhere('fathername',$fathername)->orWhere('schoolid',$schoolid)->get();
+         // $userdata = Student::with('schoolname')->with('ninthcomputerdata')->where('studentname','LIKE,'%'. $studentname)->orWhere('enrollmentnumber',$rollnumber)->orWhere('fathername',$fathername)->orWhere('schoolid',$schoolid)->get();
+
+
+                $userdata = Student::with('schoolname')->with('ninthcomputerdata')->where('studentname',$studentname)->orWhere('enrollmentnumber',$rollnumber)->orWhere('fathername',$fathername)->orWhere('schoolid',$schoolid)->get();
 
         $userdataarray = $userdata->toArray(); 
          
@@ -56,6 +59,100 @@ class NinthziauddinboardcomputerController extends Controller
         
 
     }
+
+
+       public function deleteuser(Request $request){
+      
+     //   $data = $request->json()->all();
+        //error_log($data);
+
+
+        $userninthdata = Ninthziauddinboardcomputer::find($request['id']);
+        $user = Student::find($request['studentinfo']['id']);
+        $userninthdata->delete();
+        $user->delete();
+
+        
+        
+        
+
+        
+        return response()->json([
+            'success'   =>  true
+        ], 200);
+
+
+    }
+
+
+    public function updaterecords(Request $request){
+
+
+        $user =  Student::find($request['studentid']);
+        $user->studentname = $request['name'];
+        $user->fathername = $request['fathername'];
+        $user->save();
+
+
+        $totalmarks = $request['englishmarks']+ $request['sindhimarks']+ $request['pakistanstudiesmarks']+ $request['chemistrytheory']+$request['chemistrypractical']+$request['computertheory']+$request['computerpractical'] ;
+
+        $totalchemmarks = $request['chemistrytheory'] + $request['chemistrypractical'];
+        $totalcompmarks = $request['computertheory'] + $request['computerpractical'];
+
+
+          $percent = $totalmarks/425 *100;
+         $englishpercent =$request['englishmarks']/75 *100 ;
+         $sindhipercent = $request['sindhimarks']/75 *100 ;
+         $pakistanstudiespercent = $request['pakistanstudiesmarks']/75 *100 ;
+         $chemistrypercent = $totalchemmarks/100 *100;
+         $computerpercent =  $totalcompmarks/100 *100 ;
+
+         $percentarray = array($englishpercent,$sindhipercent,$pakistanstudiespercent,$chemistrypercent,$computerpercent);
+
+         $grade = $this->gradecalculation($totalmarks);
+
+
+        $passarray = array_filter($percentarray,array($this,'checkpassstatus'));
+         
+
+         $clearedsubject = count($passarray);
+
+         $passingstatus = 'pass';
+
+         if ($clearedsubject < 5){
+            $passingstatus = 'failed';
+         }
+
+
+        $record = Ninthziauddinboardcomputer::find($request['recordid']);
+        $record->englishmarks = $request['englishmarks'];
+        $record->sindhimarks = $request['sindhimarks'];
+        $record->pakistanstudiesmark = $request['pakistanstudiesmarks'];
+        $record->computertheorymarks = $request['computertheory'];
+        $record->computerpracticalmarks = $request['computerpractical'];
+        $record->chemistrytheorymarks = $request['chemistrytheory'];
+        $record->chemistrypracticalmarks = $request['chemistrypractical'];
+        $record->totalchemistrymarks = $totalchemmarks;
+        $record->totalcomputermarks = $totalcompmarks;
+        $record->englishpercentage = $englishpercent;
+        $record->sindhipercentage = $sindhipercent;
+        $record->pakistanstudiespercentage = $pakistanstudiespercent;
+        $record->chemistrypercentage = $chemistrypercent;
+        $record->computerpercentage = $computerpercent;
+        $record->overallpercentage = $percent;
+        $record->totalclearedpaper = $clearedsubject;
+        $record->grade = $grade;
+
+
+        $record->save();
+
+        return response()->json([
+            'success'   =>  true
+        ], 200);
+
+
+    }
+
 
     /**
      * Show the form for creating a new resource.

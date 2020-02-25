@@ -25,6 +25,101 @@ class NinthziauddinboardbioController extends Controller
     }
 
 
+    public function deleteuser(Request $request){
+      
+     //   $data = $request->json()->all();
+        //error_log($data);
+
+
+        $userninthdata = Ninthziauddinboardbio::find($request['id']);
+        $user = Student::find($request['studentinfo']['id']);
+        $userninthdata->delete();
+        $user->delete();
+
+        
+        
+        
+
+        
+        return response()->json([
+            'success'   =>  true
+        ], 200);
+
+
+    }
+
+
+    public function updaterecords(Request $request){
+
+
+        $user =  Student::find($request['studentid']);
+        $user->studentname = $request['name'];
+        $user->fathername = $request['fathername'];
+        $user->save();
+
+
+        $totalmarks = $request['englishmarks']+ $request['sindhimarks']+ $request['pakistanstudiesmarks']+ $request['chemistrytheory']+$request['chemistrypractical']+$request['biotheory']+$request['biopractical'] ;
+
+        $totalchemmarks = $request['chemistrytheory'] + $request['chemistrypractical'];
+        $totalbiomarks = $request['biotheory'] + $request['biopractical'];
+
+
+          $percent = $totalmarks/425 *100;
+         $englishpercent =$request['englishmarks']/75 *100 ;
+         $sindhipercent = $request['sindhimarks']/75 *100 ;
+         $pakistanstudiespercent = $request['pakistanstudiesmarks']/75 *100 ;
+         $chemistrypercent = $totalchemmarks/100 *100;
+         $biopercent =  $totalbiomarks/100 *100 ;
+
+         $percentarray = array($englishpercent,$sindhipercent,$pakistanstudiespercent,$chemistrypercent,$biopercent);
+
+         $grade = $this->gradecalculation($totalmarks);
+
+
+        $passarray = array_filter($percentarray,array($this,'checkpassstatus'));
+         
+
+         $clearedsubject = count($passarray);
+
+         $passingstatus = 'pass';
+
+         if ($clearedsubject < 5){
+            $passingstatus = 'failed';
+         }
+
+
+        $record = Ninthziauddinboardbio::find($request['recordid']);
+        $record->englishmarks = $request['englishmarks'];
+        $record->sindhimarks = $request['sindhimarks'];
+        $record->pakistanstudiesmark = $request['pakistanstudiesmarks'];
+        $record->biotheorymarks = $request['biotheory'];
+        $record->biopracticalmarks = $request['biopractical'];
+        $record->chemistrytheorymarks = $request['chemistrytheory'];
+        $record->chemistrypracticalmarks = $request['chemistrypractical'];
+        $record->totalchemistrymarks = $totalchemmarks;
+        $record->totalbiomarks = $totalbiomarks;
+        $record->englishpercentage = $englishpercent;
+        $record->sindhipercentage = $sindhipercent;
+        $record->pakistanstudiespercentage = $pakistanstudiespercent;
+        $record->chemistrypercentage = $chemistrypercent;
+        $record->biopercentage = $biopercent;
+        $record->overallpercentage = $percent;
+        $record->totalclearedpaper = $clearedsubject;
+        $record->grade = $grade;
+
+
+        $record->save();
+
+        return response()->json([
+            'success'   =>  true
+        ], 200);
+
+
+    }
+
+
+
+
        public function search(Request $request){
 
         error_log($request);

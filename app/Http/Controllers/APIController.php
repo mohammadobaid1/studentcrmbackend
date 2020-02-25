@@ -23,13 +23,14 @@ class APIController extends Controller
     public function login(Request $request)
     {
         
-        $input = $request->only('email', 'password');
-        
+        error_log($request);
+        $input = $request->only('name', 'password');
+        //error_log($input);
         $token = null;
         $customClaims = ['foo' => 'bar', 'baz' => 'bob'];
         $token = JWTAuth::attempt($input);
         error_log($token); 
-        $userroles = User::where('email','=',$request->email)->first();
+        $userroles = User::where('name','=',$request->name)->first();
         error_log($userroles->role);
         if (!$token) {
             error_log('here');

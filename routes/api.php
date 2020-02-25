@@ -34,6 +34,7 @@ Route::get('getschools','SchoolController@index');
 // Route::get('listninthcomputerbatch','NinthcomputerbatchController@index');
 // Route::get('listninthmedicalbatch','NinthmedicalbatchController@index');
 Route::get('listmatricbatch','MatricbatchController@index');
+
 Route::get('listfirstpreengineeringbatch','FirstyearpreengineeringbatchController@index');
 Route::get('listfirstpremedicalbatch','FirstyearpremedicalbatchController@index');
 Route::get('listsecondpreengineeringbatch','SecondyearpreengineeringbatchController@index');
@@ -63,13 +64,17 @@ Route::get('getninthtest','NinthziauddinboardcomputerController@index');
 Route::post('inserttestdata','NinthziauddinboardcomputerController@create');
 Route::post('bulkinsertziauddinninth', 'NinthziauddinboardcomputerController@bulkinsert');
 Route::post('searchninthsciencedata','NinthziauddinboardcomputerController@search');
-
+Route::post('deleteninthsciencedata','NinthziauddinboardcomputerController@deleteuser');
+Route::post('editninthsciencedata','NinthziauddinboardcomputerController@updaterecords');
 //   Ninth bio 
 
 Route::get('getninthbio','NinthziauddinboardbioController@index');
 Route::post('bulkinsertziauddinninthbio', 'NinthziauddinboardbioController@bulkinsert');
 Route::post('insertninthbio','NinthziauddinboardbioController@create');
 Route::post('searchninthbiodata','NinthziauddinboardbioController@search');
+Route::post('deleteninthbiodata','NinthziauddinboardbioController@deleteuser');
+Route::post('editninthbiodata','NinthziauddinboardbioController@updaterecords');
+
 
 
 // Ninth General Group
@@ -78,6 +83,8 @@ Route::get('getninthgeneral','NinthziauddinboardgeneralgroupController@index');
 Route::post('bulkinsertziauddinninthgeneral', 'NinthziauddinboardgeneralgroupController@bulkinsert');
 Route::post('insertninthgeneral','NinthziauddinboardgeneralgroupController@create');
 Route::post('searchninthgeneraldata','NinthziauddinboardgeneralgroupController@search');
+Route::post('deleteninthgeneraldata','NinthziauddinboardgeneralgroupController@deleteuser');
+Route::post('editninthgeneraldata','NinthziauddinboardgeneralgroupController@updaterecords');
 
 
 
