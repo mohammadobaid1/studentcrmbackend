@@ -33,7 +33,7 @@ class FirstyearpremedicalbatchController extends Controller
     {
         $school = School::firstorCreate(['schoolname'-> $request['schoolname']]);
         $studentrecord = new Firstyearpremedicalbatch();
-        
+
         $studentrecord->studentname =  $request['studentname'];
         $studentrecord->studentfathername =  $request['studentfathername'];
         $studentrecord->studentrollnumber =  $request['studentrollnumber'];
@@ -83,11 +83,11 @@ class FirstyearpremedicalbatchController extends Controller
              ];
 
 
-        } 
+        }
         Firstyearpremedicalbatch::insert($formattedarray);
         return $formattedarray;
 
-        
+
     }
 
 

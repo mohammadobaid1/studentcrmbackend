@@ -1,0 +1,112 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Hsconepremed;
+
+class HsconepremedController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        return Hsconepremed::all();
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create(Request $request)
+    {
+        $studentrecord = Hsconepremed::create($request->all());
+        return $studentrecord;
+    }
+    public function bulkrecordinsert(Request $request)
+    {
+
+        $data = $request->json()->all();
+        $formattedarray = [];
+        foreach( $data as $items){
+            $now = Carbon::now('utc')->toDateTimeString();
+            $schoolid = School::firstOrCreate(['schoolname'=> $items['schoolname']]);
+            $totalmarks = $items['englishmarks'] + $items['urdumarks'] +
+            $items['islamiatmarks'] +
+            $items['physicspracticalmarks'] +
+            $items['physicstheorymarks'] + $items['chemistrytheorymarks'] +
+            $items['chemistrypracticalmarks'] + $items['zoologymarks'] + $items['botanymarks'];
+            $percentage = ($totalmarks*500)/100;
+            $items->totalmarks = $totalmarks;
+            $items->percentage = $percentage;
+            $items->schoolid = $schoolid['id'];
+            $items->created_at = $now;
+            $items->updated_at = $now;
+             $formattedarray[]= $items;
+        }
+        Hsconepremed::insert($formattedarray);
+        return $formattedarray;
+
+
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
+}
