@@ -18,7 +18,7 @@ class HsconehumanitiesController extends Controller
      */
     public function index()
     {
-
+        return Hsconehumanities::all();
     }
 
     /**
