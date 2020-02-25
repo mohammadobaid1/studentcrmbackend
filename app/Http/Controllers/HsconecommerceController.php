@@ -18,7 +18,7 @@ class HsconecommerceController extends Controller
      */
     public function index()
     {
-        //
+        return Hsconecommerce::all();
     }
 
     /**

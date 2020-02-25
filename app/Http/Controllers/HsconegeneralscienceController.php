@@ -18,7 +18,7 @@ class HsconegeneralscienceController extends Controller
      */
     public function index()
     {
-        //
+        return Hsconegeneralscience::all();
     }
 
     /**
