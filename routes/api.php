@@ -91,7 +91,7 @@ Route::post('searchninthsciencedata','NinthziauddinboardcomputerController@searc
 Route::post('deleteninthsciencedata','NinthziauddinboardcomputerController@deleteuser');
 Route::post('editninthsciencedata','NinthziauddinboardcomputerController@updaterecords');
 //   Ninth bio 
-=======
+
 
 //   Ninth bio
 
