@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Hsconepremed;
-
+use App\Services\GradeService;
+use App\School;
+use Carbon\Carbon;
 class HsconepremedController extends Controller
 {
+    public $gradeService;
+    public function __construct(GradeService $gradeService){
+        $this->gradeService = $gradeService;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -24,7 +30,29 @@ class HsconepremedController extends Controller
      */
     public function create(Request $request)
     {
-        $studentrecord = Hsconepremed::create($request->all());
+        $schoolname = $request->schoolname;
+        $data = $request->except('schoolname');
+        $school = School::firstorCreate(['schoolname' =>$schoolname]);
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+        $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
+        $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
+        $bioTotal=  $data['zoologymarks'] + $data['botanymarks'];
+        $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
+        $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
+        $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
+        $physicsPercent = $this->gradeService->getPercentage($physicsTotal,100);
+        $chemPercent = $this->gradeService->getPercentage($chemTotal,100);
+        $bioPercent = $this->gradeService->getPercentage($bioTotal,100);
+
+        $passedSubjects = $this->gradeService->passedSubjects([$engPercent,$urduPercent,$islPercent,$physicsPercent,$chemPercent,$bioPercent]);
+        $passedCount= count($passedSubjects);
+        $data['schoolid'] = $school['id'];
+        $data['totalmarks'] = $mandatorySubjectsTotal + $physicsTotal + $chemTotal + $bioTotal;
+        $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
+        $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+
+        $studentrecord = Hsconepremed::create($data);
+
         return $studentrecord;
     }
     public function bulkrecordinsert(Request $request)

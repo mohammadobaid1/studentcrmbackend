@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Hsconepreeng;
-
+use App\School;
+use Carbon\Carbon;
 class HsconepreengController extends Controller
 {
     /**
@@ -24,7 +25,28 @@ class HsconepreengController extends Controller
      */
     public function create(Request $request)
     {
-        $studentrecord = Hsconepreeng::create($request->all());
+        $schoolname = $request->schoolname;
+        $data = $request->except('schoolname');
+        $school = School::firstorCreate(['schoolname' =>$schoolname]);
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+        $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
+        $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
+        $mathTotal=  $data['mathmarks'];
+        $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
+        $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
+        $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
+        $physicsPercent = $this->gradeService->getPercentage($physicsTotal,100);
+        $chemPercent = $this->gradeService->getPercentage($chemTotal,100);
+        $mathPercent = $this->gradeService->getPercentage($mathTotal,100);
+
+        $passedSubjects = $this->gradeService->passedSubjects([$engPercent,$urduPercent,$islPercent,$physicsPercent,$chemPercent,$mathPercent]);
+        $passedCount= count($passedSubjects);
+        $data['schoolid'] = $school['id'];
+        $data['totalmarks'] = $mandatorySubjectsTotal + $physicsTotal + $chemTotal + $mathPercent;
+        $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
+        $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+
+        $studentrecord = Hsconepreeng::create($data);
         return $studentrecord;
     }
     public function bulkrecordinsert(Request $request)
@@ -39,8 +61,8 @@ class HsconepreengController extends Controller
             $items['islamiatmarks'] +
             $items['physicspracticalmarks'] +
             $items['physicstheorymarks'] + $items['chemistrytheorymarks'] +
-            $items['chemistrypracticalmarks'] + $items['zoologymarks'] + $items['botanymarks'];
-            $percentage = ($totalmarks*700)/100;
+            $items['chemistrypracticalmarks'] + $items['mathmarks'];
+            $percentage = ($totalmarks*550)/100;
             $items->totalmarks = $totalmarks;
             $items->percentage = $percentage;
             $items->schoolid = $schoolid['id'];

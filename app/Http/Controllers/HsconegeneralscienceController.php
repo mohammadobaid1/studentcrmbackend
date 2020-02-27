@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Hsconegeneralscience;
 use App\Services\GradeService;
+use App\School;
+use Carbon\Carbon;
 class HsconegeneralscienceController extends Controller
 {
     public $gradeService;
@@ -28,7 +30,39 @@ class HsconegeneralscienceController extends Controller
      */
     public function create(Request $request)
     {
-        $studentrecord = Hsconegeneralscience::create($request->all());
+        $schoolname = $request->schoolname;
+        $data = $request->except('schoolname');
+        $school = School::firstorCreate(['schoolname' =>$schoolname]);
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+        $mathTotal = $data['mathmarks'];
+        $compTotal = $data['computertheorymarks'] + $data['computerpracticalmarks'];
+        $totalsArray = [$mandatorySubjectsTotal,$mathTotal,$compTotal];
+        $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
+        $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
+        $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
+        $mathPercent = $this->gradeService->getPercentage($mathTotal,100);
+        $compPercent = $this->gradeService->getPercentage($compTotal,100);
+        $percentArray = [$engPercent,$urduPercent,$islPercent,$mathPercent,$compPercent];
+        if(isset($data['physicstheorymarks'])){
+            $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
+            $physicsPercent = $this->gradeService->getPercentage($physicsTotal,100);
+            array_push($totalsArray, $physicsTotal);
+            array_push($percentArray, $physicsPercent);
+        }else if(isset($data['statstheorymarks'])){
+            $statsTotal = $data['statstheorymarks'] + $data['statspracticalmarks'];
+            $statsPercent = $this->gradeService->getPercentage($statsTotal,100);
+            array_push($totalsArray, $statsTotal);
+            array_push($percentArray, $statsPercent);
+        }
+
+        $passedSubjects = $this->gradeService->passedSubjects($percentArray);
+        $passedCount= count($passedSubjects);
+        $data['schoolid'] = $school['id'];
+        $data['totalmarks'] = array_sum($totalsArray);
+        $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
+        $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+
+        $studentrecord = Hsconegeneralscience::create($data);
         return $studentrecord;
     }
     public function bulkrecordinsert(Request $request)

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Hsconecommerce;
 use App\Services\GradeService;
+use App\School;
+use Carbon\Carbon;
 class HsconecommerceController extends Controller
 {
     public $gradeService;
@@ -28,7 +30,30 @@ class HsconecommerceController extends Controller
      */
     public function create(Request $request)
     {
-        $studentrecord = Hsconecommerce::create($request->all());
+        $schoolname = $request->schoolname;
+        $data = $request->except('schoolname');
+        $school = School::firstorCreate(['schoolname' =>$schoolname]);
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+        $accountingTotal = $data['accountingmarks'];
+        $commerceTotal = $data['commercemarks'];
+        $economicsTotal=  $data['economicsmarks'];
+        $mathTotal=  $data['mathmarks'];
+        $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
+        $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
+        $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
+        $accountingPercent = $this->gradeService->getPercentage($accountingTotal,100);
+        $commercePercent = $this->gradeService->getPercentage($commerceTotal,75);
+        $economicsPercent = $this->gradeService->getPercentage($economicsTotal,75);
+        $mathPercent = $this->gradeService->getPercentage($mathTotal,50);
+
+        $passedSubjects = $this->gradeService->passedSubjects([$engPercent,$urduPercent,$islPercent,$accountingPercent,$commercePercent,$economicsPercent,$mathPercent]);
+        $passedCount= count($passedSubjects);
+        $data['schoolid'] = $school['id'];
+        $data['totalmarks'] = $mandatorySubjectsTotal + $accountingTotal + $commerceTotal + $economicsTotal + $mathTotal;
+        $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
+        $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+
+        $studentrecord = Hsconecommerce::create($data);
         return $studentrecord;
     }
     public function bulkrecordinsert(Request $request)
