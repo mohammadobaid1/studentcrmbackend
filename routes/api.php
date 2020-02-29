@@ -59,6 +59,7 @@ Route::post('bulksecondyearpremedbatch','SecondyearpremedicalbatchController@bul
 Route::get('hsconepremed','HsconepremedController@index');
 Route::post('hsconepremed','HsconepremedController@create');
 Route::post('bulkhsconepremed','HsconepremedController@bulkrecordinsert');
+Route::post('deletehsconepremed','HsconepremedController@destroy');
 
 // HSC pre eng
 Route::get('hsconepreeng','HsconepreengController@index');
@@ -90,7 +91,7 @@ Route::post('bulkinsertziauddinninth', 'NinthziauddinboardcomputerController@bul
 Route::post('searchninthsciencedata','NinthziauddinboardcomputerController@search');
 Route::post('deleteninthsciencedata','NinthziauddinboardcomputerController@deleteuser');
 Route::post('editninthsciencedata','NinthziauddinboardcomputerController@updaterecords');
-//   Ninth bio 
+//   Ninth bio
 
 
 //   Ninth bio

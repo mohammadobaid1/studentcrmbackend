@@ -32,6 +32,9 @@ class Student extends Model
 public function ninthgeneraldata(){
   	return $this->belongsTo('App\Ninthziauddinboardgeneralgroup','ninthexamuniquekey','enrollmentnumber');
   }
+  public function hsconepremeddata(){
+    return $this->belongsTo('App\hsconepremed','firstyearexamuniquekey','enrollmentnumber');
+}
 
 
 }

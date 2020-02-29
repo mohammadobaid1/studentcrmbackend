@@ -7,6 +7,7 @@ use App\Hsconecommerce;
 use App\Services\GradeService;
 use App\School;
 use Carbon\Carbon;
+use App\Student;
 class HsconecommerceController extends Controller
 {
     public $gradeService;
@@ -33,6 +34,8 @@ class HsconecommerceController extends Controller
         $schoolname = $request->schoolname;
         $data = $request->except('schoolname');
         $school = School::firstorCreate(['schoolname' =>$schoolname]);
+        $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearofappearing'];
+        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
         $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
         $accountingTotal = $data['accountingmarks'];
         $commerceTotal = $data['commercemarks'];

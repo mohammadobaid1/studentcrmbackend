@@ -16,9 +16,7 @@ class CreateHsconecommercesTable extends Migration
         Schema::create('hsconecommerces', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedInteger('schoolid');
-            $table->string('studentname');
-            $table->string('studentfathername');
-            $table->string('studentrollnumber')->unique();
+            $table->string('enrollmentnumber')->unique();
             $table-> unsignedInteger('englishmarks')->nullable();
             $table-> unsignedInteger('matricpassingyear');
             $table-> unsignedInteger('yearappearing');
@@ -29,6 +27,7 @@ class CreateHsconecommercesTable extends Migration
             $table->string('economicsmarks')->nullable();
             $table->string('mathmarks')->nullable();
             $table->unsignedInteger('totalmarks');
+            $table->unsignedInteger('totalclearedpaper');
             $table->decimal('percentage',5,2);
             $table->string('grade');
             $table->foreign('schoolid')->references('id')->on('schools');

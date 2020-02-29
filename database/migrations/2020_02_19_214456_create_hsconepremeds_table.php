@@ -16,9 +16,7 @@ class CreateHsconepremedsTable extends Migration
         Schema::create('hsconepremeds', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedInteger('schoolid');
-            $table->string('studentname');
-            $table->string('studentfathername');
-            $table->string('studentrollnumber')->unique();
+            $table->string('enrollmentnumber')->unique();
             $table-> unsignedInteger('englishmarks')->nullable();
             $table-> unsignedInteger('matricpassingyear');
             $table-> unsignedInteger('yearappearing');
@@ -31,6 +29,7 @@ class CreateHsconepremedsTable extends Migration
             $table->unsignedInteger('zoologymarks')->nullable();
             $table->unsignedInteger('botanymarks')->nullable();
             $table->unsignedInteger('totalmarks');
+            $table->unsignedInteger('totalclearedpaper');
             $table->decimal('percentage',5,2);
             $table->string('grade');
             $table->foreign('schoolid')->references('id')->on('schools');

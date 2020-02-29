@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Hsconepreeng;
 use App\School;
 use Carbon\Carbon;
+use App\Student;
 class HsconepreengController extends Controller
 {
     /**
@@ -28,6 +29,8 @@ class HsconepreengController extends Controller
         $schoolname = $request->schoolname;
         $data = $request->except('schoolname');
         $school = School::firstorCreate(['schoolname' =>$schoolname]);
+        $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearofappearing'];
+        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
         $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
         $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
         $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];

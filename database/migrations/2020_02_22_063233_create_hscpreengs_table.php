@@ -16,9 +16,7 @@ class CreateHscpreengsTable extends Migration
         Schema::create('hscpreengs', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedInteger('schoolid');
-            $table->string('studentname');
-            $table->string('studentfathername');
-            $table->string('studentrollnumber')->unique();
+            $table->string('enrollmentnumber')->unique();
             $table-> unsignedInteger('englishmarks')->nullable();
             $table-> unsignedInteger('matricpassingyear');
             $table-> unsignedInteger('yearappearing');
@@ -30,6 +28,7 @@ class CreateHscpreengsTable extends Migration
             $table->string('chemistrypracticalmarks')->nullable();
             $table->unsignedInteger('mathmarks')->nullable();
             $table->unsignedInteger('totalmarks');
+            $table->unsignedInteger('totalclearedpaper');
             $table->decimal('percentage',5,2);
             $table->string('grade');
             $table->foreign('schoolid')->references('id')->on('schools');

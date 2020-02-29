@@ -7,6 +7,7 @@ use App\Hsconepremed;
 use App\Services\GradeService;
 use App\School;
 use Carbon\Carbon;
+use App\Student;
 class HsconepremedController extends Controller
 {
     public $gradeService;
@@ -20,7 +21,8 @@ class HsconepremedController extends Controller
      */
     public function index()
     {
-        return Hsconepremed::all();
+        $data = Hsconepremed::with('studentinfo.schoolname')->get();
+        return $data;
     }
 
     /**
@@ -31,8 +33,10 @@ class HsconepremedController extends Controller
     public function create(Request $request)
     {
         $schoolname = $request->schoolname;
-        $data = $request->except('schoolname');
+        $data = $request->except(['schoolname','studentname','fathername','enrollmentnumber']);
         $school = School::firstorCreate(['schoolname' =>$schoolname]);
+        $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearappearing'];
+        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
         $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
         $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
         $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
@@ -51,6 +55,8 @@ class HsconepremedController extends Controller
         $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
         $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
 
+        $data['totalclearedpaper'] = $passedCount;
+        $data['enrollmentnumber'] = $firstyearexamuniquekey;
         $studentrecord = Hsconepremed::create($data);
 
         return $studentrecord;
@@ -58,23 +64,38 @@ class HsconepremedController extends Controller
     public function bulkrecordinsert(Request $request)
     {
 
-        $data = $request->json()->all();
+        $response = $request->json()->all();
         $formattedarray = [];
-        foreach( $data as $items){
+        foreach( $response as $data){
             $now = Carbon::now('utc')->toDateTimeString();
-            $schoolid = School::firstOrCreate(['schoolname'=> $items['schoolname']]);
-            $totalmarks = $items['englishmarks'] + $items['urdumarks'] +
-            $items['islamiatmarks'] +
-            $items['physicspracticalmarks'] +
-            $items['physicstheorymarks'] + $items['chemistrytheorymarks'] +
-            $items['chemistrypracticalmarks'] + $items['zoologymarks'] + $items['botanymarks'];
-            $percentage = ($totalmarks*500)/100;
-            $items->totalmarks = $totalmarks;
-            $items->percentage = $percentage;
-            $items->schoolid = $schoolid['id'];
-            $items->created_at = $now;
-            $items->updated_at = $now;
-             $formattedarray[]= $items;
+            $school = School::firstOrCreate(['schoolname'=> $data['schoolname']]);
+            $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearappearing'];
+            $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
+            $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+            $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
+            $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
+            $bioTotal=  $data['zoologymarks'] + $data['botanymarks'];
+            $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
+            $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
+            $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
+            $physicsPercent = $this->gradeService->getPercentage($physicsTotal,100);
+            $chemPercent = $this->gradeService->getPercentage($chemTotal,100);
+            $bioPercent = $this->gradeService->getPercentage($bioTotal,100);
+
+            $passedSubjects = $this->gradeService->passedSubjects([$engPercent,$urduPercent,$islPercent,$physicsPercent,$chemPercent,$bioPercent]);
+            $passedCount= count($passedSubjects);
+            $data['schoolid'] = $school['id'];
+            $data['totalmarks'] = $mandatorySubjectsTotal + $physicsTotal + $chemTotal + $bioTotal;
+            $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
+            $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+
+            $data['totalclearedpaper'] = $passedCount;
+            $data['enrollmentnumber'] = $firstyearexamuniquekey;
+
+
+            $data['created_at'] = $now;
+            $data['updated_at'] = $now;
+            $formattedarray[]= $data;
         }
         Hsconepremed::insert($formattedarray);
         return $formattedarray;
@@ -122,9 +143,40 @@ class HsconepremedController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        //
+        $data = $request->all();
+        $user =  Student::find($request['studentinfo']['id']);
+        $user->studentname = $request['studentname'];
+        $user->fathername = $request['fathername'];
+        $user->save();
+
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+        $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
+        $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
+        $bioTotal=  $data['zoologymarks'] + $data['botanymarks'];
+        $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
+        $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
+        $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
+        $physicsPercent = $this->gradeService->getPercentage($physicsTotal,100);
+        $chemPercent = $this->gradeService->getPercentage($chemTotal,100);
+        $bioPercent = $this->gradeService->getPercentage($bioTotal,100);
+
+        $passedSubjects = $this->gradeService->passedSubjects([$engPercent,$urduPercent,$islPercent,$physicsPercent,$chemPercent,$bioPercent]);
+        $passedCount= count($passedSubjects);
+        $data['totalmarks'] = $mandatorySubjectsTotal + $physicsTotal + $chemTotal + $bioTotal;
+        $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
+        $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+
+        $data['totalclearedpaper'] = $passedCount;
+        $studentrecord = Hsconepremed::create($data);
+
+        return response()->json([
+            'success'   =>  true,
+            'data' => $studentrecord
+        ], 200);
+
+
     }
 
     /**
@@ -133,8 +185,16 @@ class HsconepremedController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        //
+        $examData = Hsconepremed::find($request['id']);
+        $user = Student::find($request['studentinfo']['id']);
+        $examData->delete();
+        $user->delete();
+        return response()->json([
+            'success'   =>  true,
+            'data' => $examData
+        ], 200);
+
     }
 }
