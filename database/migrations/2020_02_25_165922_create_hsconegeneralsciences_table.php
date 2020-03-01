@@ -15,10 +15,9 @@ class CreateHsconegeneralsciencesTable extends Migration
     {
         Schema::create('hsconegeneralsciences', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedInteger('schoolid');
             $table->string('enrollmentnumber')->unique();
             $table-> unsignedInteger('englishmarks')->nullable();
-            $table-> unsignedInteger('matricpassingyear');
+            $table-> unsignedInteger('matricyear')->nullable();
             $table-> unsignedInteger('yearappearing')->nullable();
             $table->unsignedInteger ('urdumarks')->nullable();
             $table->unsignedInteger('islamiatmarks')->nullable();
@@ -33,7 +32,6 @@ class CreateHsconegeneralsciencesTable extends Migration
             $table->unsignedInteger('totalclearedpaper');
             $table->decimal('percentage',5,2);
             $table->string('grade');
-            $table->foreign('schoolid')->references('id')->on('schools');
             $table->timestamps();
         });
     }

@@ -11,7 +11,7 @@ use App\Student;
 class HsconepremedController extends Controller
 {
     public $gradeService;
-   
+
 
     public function __construct(GradeService $gradeService){
         $this->gradeService = $gradeService;
@@ -34,21 +34,21 @@ class HsconepremedController extends Controller
      */
     public function create(Request $request)
     {
-        
+
         error_log($request);
 
 
         if ($request->schoolid)
-        {  
+        {
             error_log($request->schoolid);
             $schoolid = $request["schoolid"];
         }
 
         else if ($request->schoolname) {
         $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
-         
+
         $schoolid = $school['id'];
-        
+
 
         }
 
@@ -58,11 +58,11 @@ class HsconepremedController extends Controller
 
 
         $data = $request->except(['schoolname','studentname','studentfathername','studentrollnumber']);
-        
+
 
 
         // $school = School::firstorCreate(['schoolname' =>$schoolname]);
-        
+
 
 
 
@@ -107,7 +107,7 @@ class HsconepremedController extends Controller
             $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
             $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
             $bioTotal=  $data['zoologymarks'] + $data['botanymarks'];
-            
+
             $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
             $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
             $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
@@ -128,7 +128,24 @@ class HsconepremedController extends Controller
 
             $data['created_at'] = $now;
             $data['updated_at'] = $now;
-            $formattedarray[]= $data;
+
+            $formattedarray[]=[
+                'englishmarks' => $data['englishmarks'] ?? 'A',
+                'urdumarks' => $data['urdumarks'] ?? 'A',
+                'islamiatmarks' => $data['islamiatmarks'] ?? 'A',
+                'chemistrytheorymarks' => $data['chemistrytheorymarks']?? 'A',
+                'chemistrypracticalmarks' => $data['chemistrypracticalmarks']?? 'A',
+                'physicspracticalmarks' => $data['physicspracticalmarks'] ?? 'A',
+                'physicspracticalmarks' => $data['physicspracticalmarks'] ?? 'A',
+                'yearappearing' => $data['yearappearing'] ?? '',
+                'totalmarks' => $data['totalmarks'],
+                'percentage' => $data['percentage'],
+                'grade' => $data['grade'],
+                'totalclearedpaper' => $data['totalclearedpaper'],
+                'enrollmentnumber' => $firstyearexamuniquekey,
+                'created_at' => $now,
+                'updated_at' => $now
+            ];
         }
         Hsconepremed::insert($formattedarray);
         return $formattedarray;
