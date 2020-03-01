@@ -15,6 +15,7 @@ class GradeService
         });
     }
     public function totalOfMandatorySubjects($item){
+        //error_log($item['englishmarks']);
         return $item['englishmarks'] + $item['urdumarks'] + $item['islamiatmarks'];
     }
     public function getPercentage($marks,$outOf){

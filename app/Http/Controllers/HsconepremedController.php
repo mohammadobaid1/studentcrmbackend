@@ -11,6 +11,8 @@ use App\Student;
 class HsconepremedController extends Controller
 {
     public $gradeService;
+   
+
     public function __construct(GradeService $gradeService){
         $this->gradeService = $gradeService;
     }
@@ -32,11 +34,40 @@ class HsconepremedController extends Controller
      */
     public function create(Request $request)
     {
-        $schoolname = $request->schoolname;
-        $data = $request->except(['schoolname','studentname','fathername','enrollmentnumber']);
-        $school = School::firstorCreate(['schoolname' =>$schoolname]);
-        $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearappearing'];
-        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
+        
+        error_log($request);
+
+
+        if ($request->schoolid)
+        {  
+            error_log($request->schoolid);
+            $schoolid = $request["schoolid"];
+        }
+
+        else if ($request->schoolname) {
+        $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
+         
+        $schoolid = $school['id'];
+        
+
+        }
+
+
+
+        //$schoolname = $request->schoolname;
+
+
+        $data = $request->except(['schoolname','studentname','studentfathername','studentrollnumber']);
+        
+
+
+        // $school = School::firstorCreate(['schoolname' =>$schoolname]);
+        
+
+
+
+        $firstyearexamuniquekey = $request['studentrollnumber'].$request['yearappearing'];
+        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['studentfathername'],'schoolid'=> $schoolid,'enrollmentnumber'=> $request['studentrollnumber'],'dateofbirth' => '1995','firstyearexamuniquekey'=> $firstyearexamuniquekey]);
         $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
         $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
         $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
@@ -50,7 +81,7 @@ class HsconepremedController extends Controller
 
         $passedSubjects = $this->gradeService->passedSubjects([$engPercent,$urduPercent,$islPercent,$physicsPercent,$chemPercent,$bioPercent]);
         $passedCount= count($passedSubjects);
-        $data['schoolid'] = $school['id'];
+        $data['schoolid'] = $schoolid;
         $data['totalmarks'] = $mandatorySubjectsTotal + $physicsTotal + $chemTotal + $bioTotal;
         $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
         $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
@@ -64,17 +95,19 @@ class HsconepremedController extends Controller
     public function bulkrecordinsert(Request $request)
     {
 
+        error_log($request);
         $response = $request->json()->all();
         $formattedarray = [];
         foreach( $response as $data){
             $now = Carbon::now('utc')->toDateTimeString();
             $school = School::firstOrCreate(['schoolname'=> $data['schoolname']]);
-            $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearappearing'];
-            $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
-            $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+            $firstyearexamuniquekey = $data['enrollmentnumber'].$data['yearappearing'];
+            $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $data['studentname'],'fathername'=> $data['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $data['enrollmentnumber'],'dateofbirth' => $data['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
+            $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($data);
             $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
             $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
             $bioTotal=  $data['zoologymarks'] + $data['botanymarks'];
+            
             $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
             $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
             $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
