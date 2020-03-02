@@ -32,21 +32,16 @@ class HsconepremedController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request)
-    {
-        if ($request->schoolid)
-        {
+    public function preMedCalc($request,$data){
+        if (isset($request['schoolid'])){
             $schoolid = $request["schoolid"];
+        }else if (isset($request['schoolname'])) {
+            $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
+            $schoolid = $school['id'];
         }
-        else if ($request->schoolname) {
-        $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
-        $schoolid = $school['id'];
-        }
-        $data = $request->except(['schoolname','studentname','studentfathername','studentrollnumber']);
-
-        $firstyearexamuniquekey = $request['studentrollnumber'].$request['yearappearing'];
-        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['studentfathername'],'schoolid'=> $schoolid,'enrollmentnumber'=> $request['studentrollnumber'],'dateofbirth' => '1995','firstyearexamuniquekey'=> $firstyearexamuniquekey]);
-        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+        $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearappearing'];
+        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $schoolid,'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => '1995','firstyearexamuniquekey'=> $firstyearexamuniquekey]);
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($data);
         $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
         $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
         $bioTotal=  $data['zoologymarks'] + $data['botanymarks'];
@@ -56,16 +51,19 @@ class HsconepremedController extends Controller
         $physicsPercent = $this->gradeService->getPercentage($physicsTotal,100);
         $chemPercent = $this->gradeService->getPercentage($chemTotal,100);
         $bioPercent = $this->gradeService->getPercentage($bioTotal,100);
-
         $passedSubjects = $this->gradeService->passedSubjects([$engPercent,$urduPercent,$islPercent,$physicsPercent,$chemPercent,$bioPercent]);
         $passedCount= count($passedSubjects);
-        $data['schoolid'] = $schoolid;
         $data['totalmarks'] = $mandatorySubjectsTotal + $physicsTotal + $chemTotal + $bioTotal;
         $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
         $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
-
         $data['totalclearedpaper'] = $passedCount;
         $data['enrollmentnumber'] = $firstyearexamuniquekey;
+        return $data;
+    }
+    public function create(Request $request)
+    {
+        $data = $request->except(['schoolname','studentname','fathername','enrollmentnumber']);
+        $data = $this->preMedCalc($request,$data);
         $studentrecord = Hsconepremed::create($data);
 
         return $studentrecord;
@@ -76,32 +74,7 @@ class HsconepremedController extends Controller
         $formattedarray = [];
         foreach( $response as $data){
             $now = Carbon::now('utc')->toDateTimeString();
-            $school = School::firstOrCreate(['schoolname'=> $data['schoolname']]);
-            $firstyearexamuniquekey = $data['enrollmentnumber'].$data['yearappearing'];
-            $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $data['studentname'],'fathername'=> $data['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $data['enrollmentnumber'],'dateofbirth' => $data['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
-            $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($data);
-            $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
-            $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
-            $bioTotal=  $data['zoologymarks'] + $data['botanymarks'];
-
-            $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
-            $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
-            $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
-            $physicsPercent = $this->gradeService->getPercentage($physicsTotal,100);
-            $chemPercent = $this->gradeService->getPercentage($chemTotal,100);
-            $bioPercent = $this->gradeService->getPercentage($bioTotal,100);
-
-            $passedSubjects = $this->gradeService->passedSubjects([$engPercent,$urduPercent,$islPercent,$physicsPercent,$chemPercent,$bioPercent]);
-            $passedCount= count($passedSubjects);
-            $data['schoolid'] = $school['id'];
-            $data['totalmarks'] = $mandatorySubjectsTotal + $physicsTotal + $chemTotal + $bioTotal;
-            $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
-            $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
-
-            $data['totalclearedpaper'] = $passedCount;
-            $data['enrollmentnumber'] = $firstyearexamuniquekey;
-
-
+            $data = $this->preMedCalc($data,$data);
             $data['created_at'] = $now;
             $data['updated_at'] = $now;
 
@@ -120,7 +93,7 @@ class HsconepremedController extends Controller
                 'percentage' => $data['percentage'],
                 'grade' => $data['grade'],
                 'totalclearedpaper' => $data['totalclearedpaper'],
-                'enrollmentnumber' => $firstyearexamuniquekey,
+                'enrollmentnumber' => $data['enrollmentnumber'],
                 'created_at' => $now,
                 'updated_at' => $now
             ];

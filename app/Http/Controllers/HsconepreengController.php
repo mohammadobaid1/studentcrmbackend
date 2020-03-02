@@ -24,13 +24,15 @@ class HsconepreengController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request)
-    {
-        $schoolname = $request->schoolname;
-        $data = $request->except('schoolname');
-        $school = School::firstorCreate(['schoolname' =>$schoolname]);
-        $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearofappearing'];
-        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
+    public function preEngCalc($request,$data){
+        if (isset($request['schoolid'])){
+            $schoolid = $request["schoolid"];
+        }else if (isset($request['schoolname'])) {
+            $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
+            $schoolid = $school['id'];
+        }
+        $firstyearexamuniquekey = $data['enrollmentnumber'].$data['yearofappearing'];
+        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $schoolid,'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
         $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
         $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
         $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
@@ -41,14 +43,20 @@ class HsconepreengController extends Controller
         $physicsPercent = $this->gradeService->getPercentage($physicsTotal,100);
         $chemPercent = $this->gradeService->getPercentage($chemTotal,100);
         $mathPercent = $this->gradeService->getPercentage($mathTotal,100);
-
         $passedSubjects = $this->gradeService->passedSubjects([$engPercent,$urduPercent,$islPercent,$physicsPercent,$chemPercent,$mathPercent]);
         $passedCount= count($passedSubjects);
-        $data['schoolid'] = $school['id'];
         $data['totalmarks'] = $mandatorySubjectsTotal + $physicsTotal + $chemTotal + $mathPercent;
         $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
         $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+        $data['totalclearedpaper'] = $passedCount;
+        $data['enrollmentnumber'] = $firstyearexamuniquekey;
+        return $data;
 
+    }
+    public function create(Request $request)
+    {
+        $data = $request->except(['schoolname','studentname','fathername','enrollmentnumber']);
+        $data = $this->preEngCalc($request,$data);
         $studentrecord = Hsconepreeng::create($data);
         return $studentrecord;
     }
