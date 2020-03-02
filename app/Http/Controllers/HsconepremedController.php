@@ -34,37 +34,15 @@ class HsconepremedController extends Controller
      */
     public function create(Request $request)
     {
-
-        error_log($request);
-
-
         if ($request->schoolid)
         {
-            error_log($request->schoolid);
             $schoolid = $request["schoolid"];
         }
-
         else if ($request->schoolname) {
         $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
-
         $schoolid = $school['id'];
-
-
         }
-
-
-
-        //$schoolname = $request->schoolname;
-
-
         $data = $request->except(['schoolname','studentname','studentfathername','studentrollnumber']);
-
-
-
-        // $school = School::firstorCreate(['schoolname' =>$schoolname]);
-
-
-
 
         $firstyearexamuniquekey = $request['studentrollnumber'].$request['yearappearing'];
         $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['studentfathername'],'schoolid'=> $schoolid,'enrollmentnumber'=> $request['studentrollnumber'],'dateofbirth' => '1995','firstyearexamuniquekey'=> $firstyearexamuniquekey]);
@@ -94,8 +72,6 @@ class HsconepremedController extends Controller
     }
     public function bulkrecordinsert(Request $request)
     {
-
-        error_log($request);
         $response = $request->json()->all();
         $formattedarray = [];
         foreach( $response as $data){
@@ -135,6 +111,8 @@ class HsconepremedController extends Controller
                 'islamiatmarks' => $data['islamiatmarks'] ?? 'A',
                 'chemistrytheorymarks' => $data['chemistrytheorymarks']?? 'A',
                 'chemistrypracticalmarks' => $data['chemistrypracticalmarks']?? 'A',
+                'zoologymarks' => $data['zoologymarks']?? 'A',
+                'botanymarks' => $data['botanymarks']?? 'A',
                 'physicspracticalmarks' => $data['physicspracticalmarks'] ?? 'A',
                 'physicspracticalmarks' => $data['physicspracticalmarks'] ?? 'A',
                 'yearappearing' => $data['yearappearing'] ?? '',
