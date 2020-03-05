@@ -60,6 +60,7 @@ Route::get('hsconepremed','HsconepremedController@index');
 Route::post('hsconepremed','HsconepremedController@create');
 Route::post('bulkhsconepremed','HsconepremedController@bulkrecordinsert');
 Route::post('deletehsconepremed','HsconepremedController@destroy');
+Route::post('edithsconepremed','HsconepremedController@update');
 
 // HSC pre eng
 Route::get('hsconepreeng','HsconepreengController@index');

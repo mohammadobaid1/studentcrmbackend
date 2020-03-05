@@ -63,23 +63,32 @@ class HsconepreengController extends Controller
     public function bulkrecordinsert(Request $request)
     {
 
-        $data = $request->json()->all();
+        $response = $request->json()->all();
         $formattedarray = [];
-        foreach( $data as $items){
+        foreach( $response as $data){
             $now = Carbon::now('utc')->toDateTimeString();
-            $schoolid = School::firstOrCreate(['schoolname'=> $items['schoolname']]);
-            $totalmarks = $items['englishmarks'] + $items['urdumarks'] +
-            $items['islamiatmarks'] +
-            $items['physicspracticalmarks'] +
-            $items['physicstheorymarks'] + $items['chemistrytheorymarks'] +
-            $items['chemistrypracticalmarks'] + $items['mathmarks'];
-            $percentage = ($totalmarks*550)/100;
-            $items->totalmarks = $totalmarks;
-            $items->percentage = $percentage;
-            $items->schoolid = $schoolid['id'];
-            $items->created_at = $now;
-            $items->updated_at = $now;
-             $formattedarray[]= $items;
+            $data = $this->preMedCalc($data,$data);
+            $data['created_at'] = $now;
+            $data['updated_at'] = $now;
+
+            $formattedarray[]=[
+                'englishmarks' => $data['englishmarks'] ?? 'A',
+                'urdumarks' => $data['urdumarks'] ?? 'A',
+                'islamiatmarks' => $data['islamiatmarks'] ?? 'A',
+                'chemistrytheorymarks' => $data['chemistrytheorymarks']?? 'A',
+                'chemistrypracticalmarks' => $data['chemistrypracticalmarks']?? 'A',
+                'mathmarks' => $data['mathmarks']?? 'A',
+                'physicspracticalmarks' => $data['physicspracticalmarks'] ?? 'A',
+                'physicspracticalmarks' => $data['physicspracticalmarks'] ?? 'A',
+                'yearappearing' => $data['yearappearing'] ?? '',
+                'totalmarks' => $data['totalmarks'],
+                'percentage' => $data['percentage'],
+                'grade' => $data['grade'],
+                'totalclearedpaper' => $data['totalclearedpaper'],
+                'enrollmentnumber' => $data['enrollmentnumber'],
+                'created_at' => $now,
+                'updated_at' => $now
+            ];
         }
         Hsconepreeng::insert($formattedarray);
         return $formattedarray;
@@ -129,7 +138,38 @@ class HsconepreengController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $data = $request->all();
+        $user =  Student::find($request['studentinfo']['id']);
+        $user->studentname = $request['studentinfo']['studentname'];
+        $user->fathername = $request['studentinfo']['fathername'];
+        $user->save();
+
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+        $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
+        $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
+        $mathTotal=  $data['mathmarks'];
+        $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
+        $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
+        $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
+        $physicsPercent = $this->gradeService->getPercentage($physicsTotal,100);
+        $chemPercent = $this->gradeService->getPercentage($chemTotal,100);
+        $mathPercent = $this->gradeService->getPercentage($mathTotal,100);
+
+        $passedSubjects = $this->gradeService->passedSubjects([$engPercent,$urduPercent,$islPercent,$physicsPercent,$chemPercent,$mathPercent]);
+        $passedCount= count($passedSubjects);
+        $data['totalmarks'] = $mandatorySubjectsTotal + $physicsTotal + $chemTotal + $mathTotal;
+        $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
+        $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+
+        $data['totalclearedpaper'] = $passedCount;
+
+        unset($data['studentinfo']);
+        Hsconepreeng::where('id', $data['id'])->update($data);
+
+        return response()->json([
+            'success'   =>  true,
+            'data' => $data
+        ], 200);
     }
 
     /**

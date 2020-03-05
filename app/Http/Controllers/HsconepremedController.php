@@ -148,8 +148,8 @@ class HsconepremedController extends Controller
     {
         $data = $request->all();
         $user =  Student::find($request['studentinfo']['id']);
-        $user->studentname = $request['studentname'];
-        $user->fathername = $request['fathername'];
+        $user->studentname = $request['studentinfo']['studentname'];
+        $user->fathername = $request['studentinfo']['fathername'];
         $user->save();
 
         $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
@@ -170,14 +170,14 @@ class HsconepremedController extends Controller
         $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
 
         $data['totalclearedpaper'] = $passedCount;
-        $studentrecord = Hsconepremed::create($data);
+
+        unset($data['studentinfo']);
+        Hsconepremed::where('id', $data['id'])->update($data);
 
         return response()->json([
             'success'   =>  true,
-            'data' => $studentrecord
+            'data' => $data
         ], 200);
-
-
     }
 
     /**
