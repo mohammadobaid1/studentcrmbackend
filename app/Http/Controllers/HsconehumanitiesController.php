@@ -21,7 +21,8 @@ class HsconehumanitiesController extends Controller
      */
     public function index()
     {
-        return Hsconehumanities::all();
+        $data = Hsconehumanities::with('studentinfo.schoolname')->get();
+        return $data;
     }
 
     /**
@@ -29,13 +30,15 @@ class HsconehumanitiesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request)
-    {
-        $schoolname = $request->schoolname;
-        $data = $request->except('schoolname');
-        $school = School::firstorCreate(['schoolname' =>$schoolname]);
-        $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearofappearing'];
-        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
+    public function humanitiesCalc($request, $data){
+        if (isset($request['schoolid'])){
+            $schoolid = $request["schoolid"];
+        }else if (isset($request['schoolname'])) {
+            $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
+            $schoolid = $school['id'];
+        }
+        $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearappearing'];
+        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $schoolid,'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
         $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
         $totalsArray = [$mandatorySubjectsTotal];
         $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
@@ -84,34 +87,50 @@ class HsconehumanitiesController extends Controller
 
         $passedSubjects = $this->gradeService->passedSubjects($percentArray);
         $passedCount= count($passedSubjects);
-        $data['schoolid'] = $school['id'];
         $data['totalmarks'] = array_sum($totalsArray);
         $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
         $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+        $data['totalclearedpaper'] = $passedCount;
+        $data['enrollmentnumber'] = $firstyearexamuniquekey;
+        return $data;
+    }
+    public function create(Request $request)
+    {
+        $data = $request->except(['schoolname','studentname','fathername','enrollmentnumber']);
+        $data = $this->humanitiesCalc($request,$data);
         $studentrecord = Hsconehumanities::create($data);
         return $studentrecord;
     }
     public function bulkrecordinsert(Request $request)
     {
-        $data = $request->json()->all();
+        $response = $request->json()->all();
         $formattedarray = [];
-        foreach( $data as $items){
+        foreach( $response as $data){
             $now = Carbon::now('utc')->toDateTimeString();
-            $schoolid = School::firstOrCreate(['schoolname'=> $items['schoolname']]);
-            $totalmarks = $items['englishmarks'] + $items['urdumarks'] +
-            $items['islamiatmarks'] +
-            $items['civicsmarks'] +
-            $items['sociologymarks'] + $items['educationsmarks'] +
-            $items['islamichistorymarks'] + $items['islamicstudiesmarks'] + $items['economicsmarks'] +
-            $items['generalhistorymarks'];
-            $percentage = ($totalmarks*550)/100;
-            $grade = $this->gradeService->gradecalculation($percentage);
-            $items->totalmarks = $totalmarks;
-            $items->percentage = $percentage;
-            $items->schoolid = $schoolid['id'];
-            $items->created_at = $now;
-            $items->updated_at = $now;
-             $formattedarray[]= $items;
+            $data = $this->humanitiesCalc($data,$data);
+            $data['created_at'] = $now;
+            $data['updated_at'] = $now;
+
+            $formattedarray[]=[
+                'englishmarks' => $data['englishmarks'] ?? 'A',
+                'urdumarks' => $data['urdumarks'] ?? 'A',
+                'islamiatmarks' => $data['islamiatmarks'] ?? 'A',
+                'civicsmarks' => $data['civicsmarks']?? 'A',
+                'sociologymarks' => $data['sociologymarks']?? 'A',
+                'educationsmarks' => $data['educationsmarks']?? 'A',
+                'islamichistorymarks' => $data['islamichistorymarks']?? 'A',
+                'economicsmarks' => $data['economicsmarks'] ?? 'A',
+                'islamicstudiesmarks' => $data['islamicstudiesmarks'] ?? 'A',
+                'generalhistorymarks' => $data['generalhistorymarks'] ?? 'A',
+                'yearappearing' => $data['yearappearing'] ?? '',
+                'totalmarks' => $data['totalmarks'],
+                'percentage' => $data['percentage'],
+                'grade' => $data['grade'],
+                'totalclearedpaper' => $data['totalclearedpaper'],
+                'enrollmentnumber' => $data['enrollmentnumber'],
+                'created_at' => $now,
+                'updated_at' => $now
+            ];
         }
         Hsconehumanities::insert($formattedarray);
         return $formattedarray;
@@ -159,9 +178,74 @@ class HsconehumanitiesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        //
+        $data = $request->all();
+        $user =  Student::find($request['studentinfo']['id']);
+        $user->studentname = $request['studentinfo']['studentname'];
+        $user->fathername = $request['studentinfo']['fathername'];
+        $user->save();
+
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($data);
+        $totalsArray = [$mandatorySubjectsTotal];
+        $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
+        $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
+        $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
+        $percentArray = [$engPercent,$urduPercent,$islPercent];
+        if(isset($data['civicsmarks'])){
+            $civicsTotal = $data['civicsmarks'];
+            $civicsPercent = $this->gradeService->getPercentage($civicsTotal,100);
+            array_push($totalsArray, $civicsTotal);
+            array_push($percentArray, $civicsPercent);
+        }else if(isset($data['sociologymarks'])){
+            $sociologyTotal = $data['sociologymarks'];
+            $sociologyPercent = $this->gradeService->getPercentage($sociologyTotal,100);
+            array_push($totalsArray, $sociologyTotal);
+            array_push($percentArray, $sociologyPercent);
+        }
+        if(isset($data['educationsmarks'])){
+            $educationsTotal = $data['educationsmarks'];
+            $educationsPercent = $this->gradeService->getPercentage($educationsTotal,100);
+            array_push($totalsArray, $educationsTotal);
+            array_push($percentArray, $educationsPercent);
+        }else if(isset($data['islamichistorymarks'])){
+            $islamichistoryTotal = $data['islamichistorymarks'];
+            $islamichistoryPercent = $this->gradeService->getPercentage($islamichistoryTotal,100);
+            array_push($totalsArray, $islamichistoryTotal);
+            array_push($percentArray, $islamichistoryPercent);
+        }
+        if(isset($data['economicsmarks'])){
+            $economicsTotal=  $data['economicsmarks'];
+            $economicsPercent = $this->gradeService->getPercentage($economicsTotal,100);
+            array_push($totalsArray, $economicsTotal);
+            array_push($percentArray, $economicsPercent);
+
+        }else if(isset($data['islamicstudiesmarks'])){
+            $islamicstudiesTotal=  $data['islamicstudiesmarks'];
+            $islamicstudiesPercent = $this->gradeService->getPercentage($islamicstudiesTotal,100);
+            array_push($totalsArray, $islamicstudiesTotal);
+            array_push($percentArray, $islamicstudiesPercent);
+        }else if(isset($data['generalhistorymarks'])){
+            $generalhistoryTotal=  $data['generalhistorymarks'];
+            $generalhistoryPercent = $this->gradeService->getPercentage($generalhistoryTotal,100);
+            array_push($totalsArray, $generalhistoryTotal);
+            array_push($percentArray, $generalhistoryPercent);
+        }
+
+        $passedSubjects = $this->gradeService->passedSubjects($percentArray);
+        $passedCount= count($passedSubjects);
+        $data['totalmarks'] = array_sum($totalsArray);
+        $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
+        $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+        $data['totalclearedpaper'] = $passedCount;
+
+        unset($data['studentinfo']);
+        Hsconehumanities::where('id', $data['id'])->update($data);
+
+        return response()->json([
+            'success'   =>  true,
+            'data' => $data
+        ], 200);
     }
 
     /**
@@ -170,8 +254,15 @@ class HsconehumanitiesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        //
+        $examData = Hsconehumanities::find($request['id']);
+        $user = Student::find($request['studentinfo']['id']);
+        $examData->delete();
+        $user->delete();
+        return response()->json([
+            'success'   =>  true,
+            'data' => $examData
+        ], 200);
     }
 }

@@ -66,22 +66,30 @@ Route::post('edithsconepremed','HsconepremedController@update');
 Route::get('hsconepreeng','HsconepreengController@index');
 Route::post('hsconepreeng','HsconepreengController@create');
 Route::post('bulkhsconepreeng','HsconepreengController@bulkrecordinsert');
+Route::post('deletehsconepreeng','HsconepreengController@destroy');
+Route::post('edithsconepreeng','HsconepreengController@update');
 
 // HSC general science
 
 Route::get('hsconegeneralscience','HsconegeneralscienceController@index');
 Route::post('hsconegeneralscience','HsconegeneralscienceController@create');
 Route::post('bulkhsconegeneralscience','HsconegeneralscienceController@bulkrecordinsert');
+Route::post('deletehsconegeneralscience','HsconegeneralscienceController@destroy');
+Route::post('edithsconegeneralscience','HsconegeneralscienceController@update');
 
 // HSC commerce
 Route::get('hsconecommerce','HsconecommerceController@index');
 Route::post('hsconecommerce','HsconecommerceController@create');
 Route::post('bulkhsconecommerce','HsconecommerceController@bulkrecordinsert');
+Route::post('deletehsconecommerce','HsconecommerceController@destroy');
+Route::post('edithsconecommerce','HsconecommerceController@update');
 
 // HSC humanities
 Route::get('hsconehumanities','HsconehumanitiesController@index');
 Route::post('hsconehumanities','HsconehumanitiesController@create');
 Route::post('bulkhsconehumanities','HsconehumanitiesController@bulkrecordinsert');
+Route::post('deletehsconehumanities','HsconehumanitiesController@destroy');
+Route::post('edithsconehumanities','HsconehumanitiesController@update');
 
 
 // Ninth Computer

@@ -16,7 +16,8 @@ class HsconepreengController extends Controller
      */
     public function index()
     {
-        return Hsconepreeng::all();
+        $data = Hsconepreeng::with('studentinfo.schoolname')->get();
+        return $data;
     }
 
     /**
@@ -31,9 +32,9 @@ class HsconepreengController extends Controller
             $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
             $schoolid = $school['id'];
         }
-        $firstyearexamuniquekey = $data['enrollmentnumber'].$data['yearofappearing'];
+        $firstyearexamuniquekey = $data['enrollmentnumber'].$data['yearappearing'];
         $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $schoolid,'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
-        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($data);
         $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
         $chemTotal = $data['chemistrytheorymarks'] + $data['chemistrypracticalmarks'];
         $mathTotal=  $data['mathmarks'];
@@ -178,8 +179,15 @@ class HsconepreengController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        //
+        $examData = Hsconepreeng::find($request['id']);
+        $user = Student::find($request['studentinfo']['id']);
+        $examData->delete();
+        $user->delete();
+        return response()->json([
+            'success'   =>  true,
+            'data' => $examData
+        ], 200);
     }
 }

@@ -21,7 +21,8 @@ class HsconegeneralscienceController extends Controller
      */
     public function index()
     {
-        return Hsconegeneralscience::all();
+        $data = Hsconegeneralscience::with('studentinfo.schoolname')->get();
+        return $data;
     }
 
     /**
@@ -29,14 +30,16 @@ class HsconegeneralscienceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request)
-    {
-        $schoolname = $request->schoolname;
-        $data = $request->except('schoolname');
-        $school = School::firstorCreate(['schoolname' =>$schoolname]);
-        $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearofappearing'];
-        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $school['id'],'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
-        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+    public function gsCalc($request, $data){
+        if (isset($request['schoolid'])){
+            $schoolid = $request["schoolid"];
+        }else if (isset($request['schoolname'])) {
+            $school = School::firstorCreate(['schoolname'=> $request["schoolname"]]);
+            $schoolid = $school['id'];
+        }
+        $firstyearexamuniquekey = $request['enrollmentnumber'].$request['yearappearing'];
+        $studentid = Student::firstorCreate(['firstyearexamuniquekey'=> $firstyearexamuniquekey],['studentname'=> $request['studentname'],'fathername'=> $request['fathername'],'schoolid'=> $schoolid,'enrollmentnumber'=> $request['enrollmentnumber'],'dateofbirth' => $request['dateofbirth'],'firstyearexamuniquekey'=> $firstyearexamuniquekey]);
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($data);
         $mathTotal = $data['mathmarks'];
         $compTotal = $data['computertheorymarks'] + $data['computerpracticalmarks'];
         $totalsArray = [$mandatorySubjectsTotal,$mathTotal,$compTotal];
@@ -60,35 +63,46 @@ class HsconegeneralscienceController extends Controller
 
         $passedSubjects = $this->gradeService->passedSubjects($percentArray);
         $passedCount= count($passedSubjects);
-        $data['schoolid'] = $school['id'];
         $data['totalmarks'] = array_sum($totalsArray);
         $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
         $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
-
+        $data['totalclearedpaper'] = $passedCount;
+        $data['enrollmentnumber'] = $firstyearexamuniquekey;
+        return $data;
+    }
+    public function create(Request $request)
+    {
+        $data = $request->except(['schoolname','studentname','fathername','enrollmentnumber']);
+        $data = $this->gsCalc($request,$data);
         $studentrecord = Hsconegeneralscience::create($data);
         return $studentrecord;
     }
     public function bulkrecordinsert(Request $request)
     {
-        $data = $request->json()->all();
+        $response = $request->json()->all();
         $formattedarray = [];
-        foreach( $data as $items){
+        foreach( $response as $data){
             $now = Carbon::now('utc')->toDateTimeString();
-            $schoolid = School::firstOrCreate(['schoolname'=> $items['schoolname']]);
-            $totalmarks = $items['englishmarks'] + $items['urdumarks'] +
-            $items['islamiatmarks'] +
-            $items['physicspracticalmarks'] +
-            $items['physicstheorymarks'] + $items['statspracticalmarks'] +
-            $items['statstheorymarks'] + $items['computertheorymarks'] + $items['computerpracticalmarks'] +
-            $items['mathmarks'];
-            $percentage = ($totalmarks*700)/100;
-            $grade = $this->gradeService->gradecalculation($percentage);
-            $items->totalmarks = $totalmarks;
-            $items->percentage = $percentage;
-            $items->schoolid = $schoolid['id'];
-            $items->created_at = $now;
-            $items->updated_at = $now;
-             $formattedarray[]= $items;
+            $data = $this->gsCalc($data,$data);
+            $data['created_at'] = $now;
+            $data['updated_at'] = $now;
+
+            $formattedarray[]=[
+                'englishmarks' => $data['englishmarks'] ?? 'A',
+                'urdumarks' => $data['urdumarks'] ?? 'A',
+                'islamiatmarks' => $data['islamiatmarks'] ?? 'A',
+                'computertheorymarks' => $data['computertheorymarks']?? 'A',
+                'computerpracticalmarks' => $data['computerpracticalmarks']?? 'A',
+                'mathmarks' => $data['mathmarks']?? 'A',
+                'yearappearing' => $data['yearappearing'] ?? '',
+                'totalmarks' => $data['totalmarks'],
+                'percentage' => $data['percentage'],
+                'grade' => $data['grade'],
+                'totalclearedpaper' => $data['totalclearedpaper'],
+                'enrollmentnumber' => $data['enrollmentnumber'],
+                'created_at' => $now,
+                'updated_at' => $now
+            ];
         }
         Hsconegeneralscience::insert($formattedarray);
         return $formattedarray;
@@ -138,7 +152,48 @@ class HsconegeneralscienceController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $data = $request->all();
+        $user =  Student::find($request['studentinfo']['id']);
+        $user->studentname = $request['studentinfo']['studentname'];
+        $user->fathername = $request['studentinfo']['fathername'];
+        $user->save();
+
+        $mandatorySubjectsTotal =$this->gradeService->totalOfMandatorySubjects($request->all());
+        $mathTotal = $data['mathmarks'];
+        $compTotal = $data['computertheorymarks'] + $data['computerpracticalmarks'];
+        $totalsArray = [$mandatorySubjectsTotal,$mathTotal,$compTotal];
+        $engPercent = $this->gradeService->getPercentage($data['englishmarks'],100);
+        $urduPercent = $this->gradeService->getPercentage($data['urdumarks'],100);
+        $islPercent = $this->gradeService->getPercentage($data['islamiatmarks'],50);
+        $mathPercent = $this->gradeService->getPercentage($mathTotal,100);
+        $compPercent = $this->gradeService->getPercentage($compTotal,100);
+        $percentArray = [$engPercent,$urduPercent,$islPercent,$mathPercent,$compPercent];
+        if(isset($data['physicstheorymarks'])){
+            $physicsTotal = $data['physicspracticalmarks'] + $data['physicstheorymarks'];
+            $physicsPercent = $this->gradeService->getPercentage($physicsTotal,100);
+            array_push($totalsArray, $physicsTotal);
+            array_push($percentArray, $physicsPercent);
+        }else if(isset($data['statstheorymarks'])){
+            $statsTotal = $data['statstheorymarks'] + $data['statspracticalmarks'];
+            $statsPercent = $this->gradeService->getPercentage($statsTotal,100);
+            array_push($totalsArray, $statsTotal);
+            array_push($percentArray, $statsPercent);
+        }
+
+        $passedSubjects = $this->gradeService->passedSubjects($percentArray);
+        $passedCount= count($passedSubjects);
+        $data['totalmarks'] = array_sum($totalsArray);
+        $data['percentage'] = $this->gradeService->getPercentage($data['totalmarks'],550);
+        $data['grade'] = $this->gradeService->gradecalculation($data['totalmarks']);
+        $data['totalclearedpaper'] = $passedCount;
+
+        unset($data['studentinfo']);
+        Hsconegeneralscience::where('id', $data['id'])->update($data);
+
+        return response()->json([
+            'success'   =>  true,
+            'data' => $data
+        ], 200);
     }
 
     /**
@@ -147,8 +202,15 @@ class HsconegeneralscienceController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        //
+        $examData = Hsconegeneralscience::find($request['id']);
+        $user = Student::find($request['studentinfo']['id']);
+        $examData->delete();
+        $user->delete();
+        return response()->json([
+            'success'   =>  true,
+            'data' => $examData
+        ], 200);
     }
 }
